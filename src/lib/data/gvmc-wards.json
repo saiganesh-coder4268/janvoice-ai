@@ -1,0 +1,37 @@
+[
+  {
+    "wardNumber": "1",
+    "wardName": "Kondapeta / Wilsonpeta",
+    "localities": ["Kondapeta", "Wilsonpeta"],
+    "population": 26308,
+    "densityTier": "Medium"
+  },
+  {
+    "wardNumber": "2",
+    "wardName": "Madhurawada / Dabagardens",
+    "localities": ["Madhurawada", "Dabagardens"],
+    "population": 25802,
+    "densityTier": "Medium"
+  },
+  {
+    "wardNumber": "3",
+    "wardName": "Marikavalasa / Rajeev Gruhakalpa",
+    "localities": ["Marikavalasa", "Rajeev Gruhakalpa"],
+    "population": 25096,
+    "densityTier": "Medium"
+  },
+  {
+    "wardNumber": "14",
+    "wardName": "Sample High Density Ward",
+    "localities": ["Sample Locality A"],
+    "population": 35000,
+    "densityTier": "High"
+  },
+  {
+    "wardNumber": "98",
+    "wardName": "Sample Low Density Ward",
+    "localities": ["Sample Locality B"],
+    "population": 12000,
+    "densityTier": "Low"
+  }
+]
