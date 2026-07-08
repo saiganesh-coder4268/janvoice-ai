@@ -35,15 +35,11 @@ export default function FullMapPage() {
     fetchComplaints();
   }, []);
 
-  const getSeverityColor = (severity: string, status: string) => {
+  const getPriorityColor = (priorityScore: number, status: string) => {
     if (status === 'resolved') return '#22c55e';
-    switch (severity) {
-      case 'critical': return '#ef4444';
-      case 'high': return '#f97316';
-      case 'medium': return '#eab308';
-      case 'low': return '#94a3b8';
-      default: return '#3b82f6';
-    }
+    if (priorityScore >= 70) return '#ef4444';
+    if (priorityScore >= 45) return '#f97316';
+    return '#a855f7';
   };
 
   return (
@@ -63,8 +59,8 @@ export default function FullMapPage() {
               title={complaint.title}
             >
               <Pin 
-                background={getSeverityColor(complaint.severity, complaint.status)}
-                borderColor={getSeverityColor(complaint.severity, complaint.status)}
+                background={getPriorityColor(complaint.priorityScore, complaint.status)}
+                borderColor={getPriorityColor(complaint.priorityScore, complaint.status)}
                 glyphColor="#fff"
               />
             </AdvancedMarker>
@@ -73,20 +69,20 @@ export default function FullMapPage() {
       </APIProvider>
 
       {/* Floating Legend */}
-      <div className="absolute bottom-6 left-6 bg-white p-4 rounded-xl shadow-lg border border-slate-200 z-10">
-        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Status / Severity</h4>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <span className="w-3 h-3 rounded-full bg-red-500"></span> Critical
+      <div className="absolute bottom-6 left-6 bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 z-10 hidden sm:block">
+        <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
+        <div className="flex flex-col gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500"></span> High (70-100)
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <span className="w-3 h-3 rounded-full bg-orange-500"></span> High
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500"></span> Medium (45-69)
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <span className="w-3 h-3 rounded-full bg-yellow-500"></span> Medium
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-purple-500"></span> Low (0-44)
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <span className="w-3 h-3 rounded-full bg-green-500"></span> Resolved
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></span> Resolved
           </div>
         </div>
       </div>

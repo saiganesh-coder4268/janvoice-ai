@@ -32,7 +32,7 @@ export default function MPDashboard() {
     fetchComplaints();
   }, []);
 
-  const getMarkerStyle = (severity: string, status: string) => {
+  const getMarkerStyle = (priorityScore: number, status: string) => {
     if (status === 'resolved') {
       return {
         bg: 'bg-green-500',
@@ -42,21 +42,18 @@ export default function MPDashboard() {
     }
     let bg = 'bg-blue-500';
     let glow = '';
-    switch (severity) {
-      case 'critical':
-      case 'high':
-        bg = 'bg-red-500';
-        glow = 'glow-red';
-        break;
-      case 'medium':
-        bg = 'bg-orange-600';
-        glow = 'glow-orange';
-        break;
-      case 'low':
-        bg = 'bg-purple-500';
-        glow = 'glow-purple';
-        break;
+    
+    if (priorityScore >= 70) {
+      bg = 'bg-red-500';
+      glow = 'glow-red';
+    } else if (priorityScore >= 45) {
+      bg = 'bg-orange-500';
+      glow = 'glow-orange';
+    } else {
+      bg = 'bg-purple-500';
+      glow = 'glow-purple';
     }
+    
     return {
       bg,
       glow,
@@ -64,25 +61,17 @@ export default function MPDashboard() {
     };
   };
 
-  const getSeverityBgColor = (severity: string, status: string) => {
+  const getPriorityBgColor = (priorityScore: number, status: string) => {
     if (status === 'resolved') return 'bg-green-500';
-    switch (severity) {
-      case 'critical':
-      case 'high':
-        return 'bg-red-500';
-      case 'medium':
-        return 'bg-orange-600';
-      case 'low':
-        return 'bg-purple-500';
-      default:
-        return 'bg-blue-500';
-    }
+    if (priorityScore >= 70) return 'bg-red-500';
+    if (priorityScore >= 45) return 'bg-orange-500';
+    return 'bg-purple-500';
   };
 
   return (
-    <div className="flex w-full h-full">
+    <div className="flex flex-col lg:flex-row w-full h-full overflow-hidden">
       {/* Map Section */}
-      <div className="flex-1 relative bg-slate-100">
+      <div className="flex-1 relative bg-slate-100 min-h-[50vh]">
         <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
           <Map
             defaultCenter={VIZAG_CENTER}
@@ -92,7 +81,7 @@ export default function MPDashboard() {
             minZoom={11} // Prevent zooming out too far from Vizag
           >
             {complaints.map((complaint) => {
-              const style = getMarkerStyle(complaint.severity, complaint.status);
+              const style = getMarkerStyle(complaint.priorityScore, complaint.status);
               return (
                 <AdvancedMarker 
                   key={complaint.id}
@@ -109,20 +98,20 @@ export default function MPDashboard() {
         </APIProvider>
 
         {/* Floating Legend */}
-        <div className="absolute bottom-6 left-6 bg-white p-4 rounded-xl shadow-lg border border-slate-200 z-10">
-          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Status / Severity</h4>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse"></span> Critical / High
+        <div className="absolute bottom-6 left-6 bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 z-10 hidden sm:block">
+          <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse"></span> High (70-100)
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="w-3 h-3 rounded-full bg-orange-600 shadow-[0_0_8px_rgba(234,88,12,0.8)] animate-pulse"></span> Medium
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] animate-pulse"></span> Medium (45-69)
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></span> Low
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></span> Low (0-44)
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="w-3 h-3 rounded-full bg-green-500"></span> Resolved
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></span> Resolved
             </div>
           </div>
         </div>
@@ -144,7 +133,7 @@ export default function MPDashboard() {
       </div>
 
       {/* Right Sidebar */}
-      <div className="w-96 bg-white border-l border-slate-200 flex flex-col h-full overflow-y-auto">
+      <div className="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col h-1/2 lg:h-full overflow-y-auto">
         
         {/* AI Insights Panel */}
         <div className="p-6 border-b border-slate-200">
@@ -183,7 +172,7 @@ export default function MPDashboard() {
             ) : (
               complaints.slice(0, 5).map((complaint) => (
                 <div key={complaint.id} className="flex gap-3 items-start group p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors">
-                  <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${getSeverityBgColor(complaint.severity, complaint.status)}`}></span>
+                  <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${getPriorityBgColor(complaint.priorityScore, complaint.status)}`}></span>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <h4 className="text-sm font-semibold text-slate-900 truncate pr-2">{complaint.title}</h4>

@@ -5,9 +5,9 @@ import { useState } from 'react';
 
 // Mock data for MVP
 const complaints = [
-  { id: '1', lat: 28.6139, lng: 77.2090, severity: 'critical', title: 'Water Main Burst' },
-  { id: '2', lat: 28.6150, lng: 77.2100, severity: 'high', title: 'Pothole on Main Road' },
-  { id: '3', lat: 28.6120, lng: 77.2050, severity: 'medium', title: 'Streetlight Out' },
+  { id: '1', lat: 28.6139, lng: 77.2090, priorityScore: 85, title: 'Water Main Burst' },
+  { id: '2', lat: 28.6150, lng: 77.2100, priorityScore: 55, title: 'Pothole on Main Road' },
+  { id: '3', lat: 28.6120, lng: 77.2050, priorityScore: 25, title: 'Streetlight Out' },
 ];
 
 export function GISMap() {
@@ -32,9 +32,9 @@ export function GISMap() {
             <AdvancedMarker key={c.id} position={{ lat: c.lat, lng: c.lng }}>
               <Pin 
                 background={
-                  c.severity === 'critical' ? '#D32F2F' : 
-                  c.severity === 'high' ? '#FF9800' : 
-                  '#FFEB3B'
+                  c.priorityScore >= 70 ? '#ef4444' : 
+                  c.priorityScore >= 45 ? '#f97316' : 
+                  '#a855f7'
                 }
                 borderColor={'#0B1118'}
                 glyphColor={'#fff'}
