@@ -48,9 +48,8 @@ function BeforeAfterSlider() {
     >
       {/* After Image (Background) */}
       <div className="absolute inset-0 bg-emerald-100">
-        {/* Placeholder for smooth road (replace with your actual after image) */}
         <img 
-          src="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1200&auto=format&fit=crop" 
+          src="/after.jpg" 
           alt="After" 
           className="w-full h-full object-cover"
           draggable={false}
@@ -65,11 +64,10 @@ function BeforeAfterSlider() {
         className="absolute inset-0 bg-slate-300 pointer-events-none"
         style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
       >
-        {/* Placeholder for pothole road (replace with your actual before image) */}
         <img 
-          src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=1200&auto=format&fit=crop" 
+          src="/before.jpg" 
           alt="Before" 
-          className="w-full h-full object-cover sepia contrast-125 brightness-90 grayscale-[0.5]"
+          className="w-full h-full object-cover"
           draggable={false}
         />
         <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full z-10 shadow-md border border-slate-200">
