@@ -50,7 +50,7 @@ function BeforeAfterSlider() {
       <div className="absolute inset-0 bg-emerald-100">
         {/* Placeholder for smooth road (replace with your actual after image) */}
         <img 
-          src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=1200&auto=format&fit=crop" 
+          src="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1200&auto=format&fit=crop" 
           alt="After" 
           className="w-full h-full object-cover"
           draggable={false}
