@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
-import { collection, query, orderBy, getDocs, limit } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
 import { AlertCircle, X, MapPin } from "lucide-react";
@@ -19,27 +19,25 @@ export default function FullMapPage() {
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
 
   useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const q = query(collection(db, "complaints"), orderBy("priorityScore", "desc"), limit(200));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Complaint));
-        setComplaints(data);
-      } catch (err: any) {
-        console.error("Failed to fetch complaints", err);
-        setError(err.message || "Failed to load map data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchComplaints();
+    const q = query(collection(db, "complaints"), orderBy("priorityScore", "desc"), limit(200));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Complaint));
+      setComplaints(data);
+      setLoading(false);
+    }, (err: any) => {
+      console.error("Failed to fetch complaints", err);
+      setError(err.message || "Failed to load map data.");
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const getPriorityColor = (priorityScore: number, status: string) => {
-    if (status === 'resolved') return '#22c55e';
-    if (priorityScore >= 70) return '#ef4444';
-    if (priorityScore >= 45) return '#f97316';
-    return '#a855f7';
+    if (status === 'resolved') return '#00FF40'; // neon green
+    if (priorityScore >= 70) return '#FF003C'; // sharp red
+    if (priorityScore >= 45) return '#FF9D00'; // sharp orange
+    return '#00D0FF'; // cyan
   };
 
   return (
@@ -52,10 +50,16 @@ export default function FullMapPage() {
           disableDefaultUI={false}
           minZoom={11} // Prevent zooming out of Vizag area
         >
-          {complaints.map((complaint) => (
+          {complaints.map((complaint) => {
+            // Add deterministic jitter so markers at the exact same location don't perfectly overlap
+            const hash = complaint.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+            const latJitter = ((hash % 100) - 50) * 0.00005; // approx +/- 5 meters
+            const lngJitter = (((hash * 7) % 100) - 50) * 0.00005;
+            
+            return (
             <AdvancedMarker 
               key={complaint.id}
-              position={{ lat: complaint.location.lat, lng: complaint.location.lng }}
+              position={{ lat: Number(complaint.location.lat) + latJitter, lng: Number(complaint.location.lng) + lngJitter }}
               title={complaint.title}
             >
               <Pin 
@@ -64,7 +68,7 @@ export default function FullMapPage() {
                 glyphColor="#fff"
               />
             </AdvancedMarker>
-          ))}
+          )})}
         </Map>
       </APIProvider>
 
@@ -73,16 +77,16 @@ export default function FullMapPage() {
         <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
         <div className="flex flex-col gap-1.5 sm:gap-2">
           <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500"></span> High (70-100)
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(255,0,60,0.8)]" style={{ backgroundColor: '#FF003C' }}></span> High (70-100)
           </div>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500"></span> Medium (45-69)
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
           </div>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-purple-500"></span> Low (0-44)
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,208,255,0.8)]" style={{ backgroundColor: '#00D0FF' }}></span> Low (0-44)
           </div>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></span> Resolved
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved
           </div>
         </div>
       </div>

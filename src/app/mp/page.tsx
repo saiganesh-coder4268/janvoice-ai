@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
-import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { APIProvider, Map, AdvancedMarker, useMap, Pin } from "@vis.gl/react-google-maps";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
 import { MoreHorizontal, Lightbulb, MapPin, Search, AlertCircle } from "lucide-react";
@@ -10,62 +10,57 @@ import Link from "next/link";
 
 const VIZAG_CENTER = { lat: 17.6868, lng: 83.2185 };
 
+function MapController({ center, zoom }: { center: { lat: number, lng: number } | null, zoom: number }) {
+  const map = useMap("DEMO_MAP_ID");
+  useEffect(() => {
+    if (map && center) {
+      map.panTo(center);
+      map.setZoom(zoom);
+    }
+  }, [map, center, zoom]);
+  return null;
+}
+
 export default function MPDashboard() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [activeCenter, setActiveCenter] = useState<{ lat: number, lng: number } | null>(null);
+
   useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const q = query(collection(db, "complaints"), orderBy("priorityScore", "desc"));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Complaint));
-        setComplaints(data);
-      } catch (err: any) {
-        console.error("Failed to fetch complaints", err);
-        setError(err.message || "Failed to load map data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchComplaints();
+    const q = query(collection(db, "complaints"), orderBy("priorityScore", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Complaint));
+      setComplaints(data);
+      setLoading(false);
+    }, (err: any) => {
+      console.error("Failed to fetch complaints", err);
+      setError(err.message || "Failed to load map data.");
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const getMarkerStyle = (priorityScore: number, status: string) => {
     if (status === 'resolved') {
-      return {
-        bg: 'bg-green-500',
-        glow: '',
-        blink: false,
-      };
+      return { bg: '#00FF40', glow: '0 0 10px rgba(0,255,64,0.6)', blink: false };
     }
-    let bg = 'bg-blue-500';
-    let glow = '';
-    
     if (priorityScore >= 70) {
-      bg = 'bg-red-500';
-      glow = 'glow-red';
+      return { bg: '#FF003C', glow: '0 0 15px rgba(255,0,60,0.9)', blink: true };
     } else if (priorityScore >= 45) {
-      bg = 'bg-orange-500';
-      glow = 'glow-orange';
+      return { bg: '#FF9D00', glow: '0 0 12px rgba(255,157,0,0.8)', blink: true };
     } else {
-      bg = 'bg-purple-500';
-      glow = 'glow-purple';
+      return { bg: '#00D0FF', glow: '0 0 10px rgba(0,208,255,0.7)', blink: true };
     }
-    
-    return {
-      bg,
-      glow,
-      blink: true,
-    };
   };
 
   const getPriorityBgColor = (priorityScore: number, status: string) => {
-    if (status === 'resolved') return 'bg-green-500';
-    if (priorityScore >= 70) return 'bg-red-500';
-    if (priorityScore >= 45) return 'bg-orange-500';
-    return 'bg-purple-500';
+    if (status === 'resolved') return '#00FF40';
+    if (priorityScore >= 70) return '#FF003C';
+    if (priorityScore >= 45) return '#FF9D00';
+    return '#00D0FF';
   };
 
   return (
@@ -80,17 +75,29 @@ export default function MPDashboard() {
             disableDefaultUI={false}
             minZoom={11} // Prevent zooming out too far from Vizag
           >
+            <MapController center={activeCenter} zoom={16} />
             {complaints.map((complaint) => {
               const style = getMarkerStyle(complaint.priorityScore, complaint.status);
+              
+              // Add deterministic jitter so markers at the exact same location don't perfectly overlap
+              const hash = complaint.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+              const latJitter = ((hash % 100) - 50) * 0.00005; // approx +/- 5 meters
+              const lngJitter = (((hash * 7) % 100) - 50) * 0.00005;
+
               return (
                 <AdvancedMarker 
                   key={complaint.id}
-                  position={{ lat: complaint.location.lat, lng: complaint.location.lng }}
+                  position={{ lat: Number(complaint.location.lat) + latJitter, lng: Number(complaint.location.lng) + lngJitter }}
                   title={complaint.title}
                 >
-                  <div 
-                    className={`w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-all ${style.bg} ${style.glow} ${style.blink ? 'animate-marker-blink' : ''}`}
-                  />
+                  <div className="relative cursor-pointer hover:scale-110 transition-transform">
+                    {style.blink && (
+                      <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: style.bg }}></div>
+                    )}
+                    <div style={{ boxShadow: style.glow, borderRadius: '50%', backgroundColor: 'white', padding: '2px' }}>
+                      <Pin background={style.bg} borderColor={style.bg} glyphColor="#fff" scale={1.1} />
+                    </div>
+                  </div>
                 </AdvancedMarker>
               );
             })}
@@ -102,16 +109,16 @@ export default function MPDashboard() {
           <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
           <div className="flex flex-col gap-1.5 sm:gap-2">
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse"></span> High (70-100)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,0,60,0.8)]" style={{ backgroundColor: '#FF003C' }}></span> High (70-100)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)] animate-pulse"></span> Medium (45-69)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse"></span> Low (0-44)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(0,208,255,0.8)]" style={{ backgroundColor: '#00D0FF' }}></span> Low (0-44)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></span> Resolved
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved
             </div>
           </div>
         </div>
@@ -171,8 +178,12 @@ export default function MPDashboard() {
               <p className="text-sm text-slate-500">No issues found.</p>
             ) : (
               complaints.slice(0, 5).map((complaint) => (
-                <div key={complaint.id} className="flex gap-3 items-start group p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors">
-                  <span className={`w-2 h-2 rounded-full mt-2 shrink-0 ${getPriorityBgColor(complaint.priorityScore, complaint.status)}`}></span>
+                <div 
+                  key={complaint.id} 
+                  onClick={() => setActiveCenter({ lat: complaint.location.lat, lng: complaint.location.lng })}
+                  className="flex gap-3 items-start group p-2 -mx-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <span className="w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: getPriorityBgColor(complaint.priorityScore, complaint.status) }}></span>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <h4 className="text-sm font-semibold text-slate-900 truncate pr-2">{complaint.title}</h4>

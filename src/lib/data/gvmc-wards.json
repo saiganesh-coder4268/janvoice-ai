@@ -1,8 +1,8 @@
 [
   {
     "wardNumber": "1",
-    "wardName": "Kondapeta / Wilsonpeta",
-    "localities": ["Kondapeta", "Wilsonpeta"],
+    "wardName": "Kondapeta / Wilsonpeta / Bheemili",
+    "localities": ["Kondapeta", "Wilsonpeta", "Bheemunipatnam", "Thagarapuvalasa", "Sanghivalasa"],
     "population": 26308,
     "densityTier": "Medium"
   },

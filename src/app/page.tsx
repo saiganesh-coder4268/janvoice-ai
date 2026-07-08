@@ -26,7 +26,7 @@ export default function LandingPage() {
                 <span className="text-blue-600">Smarter Development</span>
               </h1>
               <p className="mx-auto max-w-[700px] text-lg text-slate-600 md:text-xl leading-relaxed">
-                JanVoice AI converts scattered citizen complaints into structured, AI-prioritized development intelligence for Visakhapatnam.
+                JanVoice transforms citizen reports into structured, prioritized civic intelligence—helping governments identify, understand, and resolve community issues faster.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Link href="/citizen">

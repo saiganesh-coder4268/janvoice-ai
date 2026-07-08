@@ -81,17 +81,17 @@ Submission text: ${description}
 
     // 2. Calculate Priority Score based on Ward Data
     let severityScore = 0;
-    if (aiResult.severity === "critical") severityScore = 30;
-    if (aiResult.severity === "high") severityScore = 20;
-    if (aiResult.severity === "medium") severityScore = 10;
+    if (aiResult.severity === "critical") severityScore = 40;
+    if (aiResult.severity === "high") severityScore = 25;
+    if (aiResult.severity === "medium") severityScore = 15;
     if (aiResult.severity === "low") severityScore = 5;
 
-    // Ward Population Tier logic
-    let wardScore = 2; // default low
+    // Ward Population Tier logic - Increased heavily for proper classification
+    let wardScore = 5; // default low
     const wardData = gvmcWards.find(w => w.wardNumber === location.ward);
     if (wardData) {
-      if (wardData.densityTier === "High") wardScore = 10;
-      if (wardData.densityTier === "Medium") wardScore = 6;
+      if (wardData.densityTier === "High") wardScore = 40;
+      if (wardData.densityTier === "Medium") wardScore = 20;
     }
 
     // Mock other scores for demo (in real app, we'd query firestore for duplicates and Places API for infra)
