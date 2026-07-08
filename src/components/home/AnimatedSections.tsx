@@ -8,6 +8,91 @@ import {
   LayoutDashboard, ImageIcon
 } from "lucide-react";
 
+import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from "react";
+
+// --- Interactive Before/After Slider ---
+function BeforeAfterSlider() {
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMove = (clientX: number) => {
+    if (!isDragging || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const percent = Math.max(0, Math.min((x / rect.width) * 100, 100));
+    setSliderPosition(percent);
+  };
+
+  const handleMouseMove = (e: ReactMouseEvent) => handleMove(e.clientX);
+  const handleTouchMove = (e: ReactTouchEvent) => handleMove(e.touches[0].clientX);
+
+  useEffect(() => {
+    const handleMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchend', handleMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, []);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="w-full h-80 relative rounded-2xl overflow-hidden cursor-ew-resize shadow-lg select-none group"
+      onMouseDown={() => setIsDragging(true)}
+      onTouchStart={() => setIsDragging(true)}
+      onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
+    >
+      {/* After Image (Background) */}
+      <div className="absolute inset-0 bg-emerald-100">
+        {/* Placeholder for smooth road (replace with your actual after image) */}
+        <img 
+          src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=1200&auto=format&fit=crop" 
+          alt="After" 
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
+        <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full z-10 shadow-md border border-emerald-200">
+          <span className="text-emerald-700 font-bold uppercase tracking-widest text-xs">After</span>
+        </div>
+      </div>
+
+      {/* Before Image (Foreground, clipped) */}
+      <div 
+        className="absolute inset-0 bg-slate-300 pointer-events-none"
+        style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
+      >
+        {/* Placeholder for pothole road (replace with your actual before image) */}
+        <img 
+          src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=1200&auto=format&fit=crop" 
+          alt="Before" 
+          className="w-full h-full object-cover sepia contrast-125 brightness-90 grayscale-[0.5]"
+          draggable={false}
+        />
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full z-10 shadow-md border border-slate-200">
+          <span className="text-slate-600 font-bold uppercase tracking-widest text-xs">Before</span>
+        </div>
+      </div>
+
+      {/* Slider Line & Handle */}
+      <div 
+        className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize shadow-[0_0_15px_rgba(0,0,0,0.5)] z-20 pointer-events-none"
+        style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl border-2 border-slate-100 flex items-center justify-center transition-transform group-hover:scale-110">
+          <div className="flex gap-1">
+            <div className="w-0.5 h-3 bg-slate-300 rounded-full"></div>
+            <div className="w-0.5 h-3 bg-slate-300 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Timeline Data ---
 const timelineSteps = [
   {
@@ -147,27 +232,7 @@ const showcaseSlides = [
     title: "Resolution Verification",
     description: "AI helps verify completed work, creating transparent evidence of public service.",
     icon: ImageIcon,
-    mockup: (
-      <div className="w-full h-80 bg-slate-200 rounded-2xl border border-slate-300 shadow-inner flex overflow-hidden relative group">
-        <div className="w-1/2 h-full bg-slate-300 flex items-center justify-center border-r-2 border-white transition-all duration-700 ease-in-out group-hover:w-[40%] relative">
-          <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-            <ImageIcon className="w-16 h-16 opacity-50" />
-          </div>
-          <span className="text-slate-500 font-bold uppercase tracking-widest text-sm bg-white/70 px-4 py-1.5 rounded-full backdrop-blur-sm z-10 shadow-sm">Before</span>
-        </div>
-        <div className="w-1/2 h-full bg-emerald-100 flex items-center justify-center transition-all duration-700 ease-in-out group-hover:w-[60%] relative">
-          <div className="absolute inset-0 flex items-center justify-center text-emerald-300">
-            <ImageIcon className="w-16 h-16 opacity-50" />
-          </div>
-          <span className="text-emerald-700 font-bold uppercase tracking-widest text-sm bg-white/70 px-4 py-1.5 rounded-full backdrop-blur-sm z-10 shadow-sm">After</span>
-        </div>
-        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center justify-center transition-all duration-700 ease-in-out group-hover:left-[40%] z-20">
-          <div className="w-10 h-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-400 text-lg cursor-ew-resize">
-            ↔
-          </div>
-        </div>
-      </div>
-    )
+    mockup: <BeforeAfterSlider />
   }
 ];
 
