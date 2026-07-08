@@ -4,6 +4,8 @@ import { db } from "@/lib/firebase/config";
 import { Complaint, AIAnalysis, ComplaintSeverity } from "@/types";
 import gvmcWards from "@/lib/data/gvmc-wards.json";
 
+export const maxDuration = 60; // Prevent 10s timeouts on Vercel hobby plan
+
 // Helper function to call Gemini API with JSON parsing and retry logic
 async function callGemini(prompt: string, retries = 1): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -74,9 +76,9 @@ Submission text: ${description}
     let aiResult;
     try {
       aiResult = await callGemini(classificationPrompt);
-    } catch (e) {
+    } catch (e: any) {
       console.error("AI Pipeline failed:", e);
-      return NextResponse.json({ error: "AI Processing Failed" }, { status: 500 });
+      return NextResponse.json({ error: e.message || "AI Processing Failed. Did you set GEMINI_API_KEY in Vercel?" }, { status: 500 });
     }
 
     // 2. Calculate Priority Score based on Ward Data
@@ -150,8 +152,8 @@ Submission text: ${description}
 
     return NextResponse.json({ success: true, complaintId, priorityScore: totalPriorityScore });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }

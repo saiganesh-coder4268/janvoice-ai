@@ -152,13 +152,14 @@ export default function NewComplaintPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit complaint");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to submit complaint");
       }
 
       router.push("/citizen");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission error", error);
-      alert("Failed to submit complaint. Please try again.");
+      alert(error.message || "Failed to submit complaint. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
