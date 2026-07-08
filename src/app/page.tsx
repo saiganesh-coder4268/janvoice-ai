@@ -54,7 +54,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="w-full py-6 bg-slate-900 text-slate-400 text-center">
-        <p className="text-sm">Built for India. Powered by AI AI.</p>
+        <p className="text-sm">MADE FOR INDIA. POWERED BY STRAWHATS</p>
       </footer>
     </div>
   );
