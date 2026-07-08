@@ -42,7 +42,7 @@ export default function TopBar({ tabs = [] }: TopBarProps) {
         </div>
 
         {/* Tabs Section */}
-        <nav className="hidden md:flex flex-1 items-center gap-1 h-full">
+        <nav className="flex flex-1 items-center gap-1 h-full overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
             return (

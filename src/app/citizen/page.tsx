@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
-import { MapPin, Clock, AlertCircle, CheckCircle, FileText } from "lucide-react";
+import { MapPin, Clock, AlertCircle, CheckCircle, FileText, Plus } from "lucide-react";
 
 export default function CitizenDashboard() {
   const { user, loading } = useAuth();
@@ -105,16 +106,29 @@ export default function CitizenDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-16 sm:pb-0">
+      {/* Floating Action Button for Mobile */}
+      <div className="fixed bottom-6 right-6 sm:hidden z-40">
+        <Link href="/citizen/new" className="flex items-center justify-center h-14 w-14 bg-blue-600 text-white rounded-full shadow-[0_4px_20px_rgba(37,99,235,0.4)] hover:bg-blue-700 active:scale-95 transition-all">
+          <Plus className="h-6 w-6" />
+        </Link>
+      </div>
+
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Public Complaints</h1>
-        <p className="text-slate-500 mt-1">Track reported, pending, and resolved community issues in Visakhapatnam.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Public Complaints</h1>
+          <p className="text-slate-500 mt-1">Track reported, pending, and resolved community issues in Visakhapatnam.</p>
+        </div>
+        <Link href="/citizen/new" className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shrink-0 shadow-sm">
+          <Plus className="h-5 w-5" />
+          <span>Report Issue</span>
+        </Link>
       </div>
 
       {/* Tabs Switcher */}
       <div className="border-b border-slate-200">
-        <div className="flex space-x-8">
+        <div className="flex space-x-8 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <button
             onClick={() => setActiveTab('reported')}
             className={`flex items-center gap-2 pb-4 text-sm font-semibold border-b-2 transition-all ${

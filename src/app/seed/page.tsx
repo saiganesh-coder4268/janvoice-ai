@@ -25,10 +25,10 @@ export default function SeedPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center max-w-md">
         <h1 className="text-2xl font-bold mb-4">Database Seeder</h1>
-        <p className="text-slate-500 mb-8">This will populate Firestore with dummy demo data for JanVoice AI (Visakhapatnam).</p>
-        
-        <Button 
-          onClick={handleSeed} 
+        <p className="text-slate-500 mb-8">This will populate Firestore with dummy demo data for JanVoice AI .</p>
+
+        <Button
+          onClick={handleSeed}
           disabled={loading || success}
           className="w-full"
         >
