@@ -49,7 +49,7 @@ function BeforeAfterSlider() {
       {/* After Image (Background) */}
       <div className="absolute inset-0 bg-emerald-100">
         <img 
-          src="/after.jpg" 
+          src="/after-pothole.jpg" 
           alt="After" 
           className="w-full h-full object-cover"
           draggable={false}
@@ -65,7 +65,7 @@ function BeforeAfterSlider() {
         style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
       >
         <img 
-          src="/before.jpg" 
+          src="/before-pothole.jpg" 
           alt="Before" 
           className="w-full h-full object-cover"
           draggable={false}
