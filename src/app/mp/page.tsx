@@ -80,7 +80,7 @@ export default function MPDashboard() {
               const style = getMarkerStyle(complaint.priorityScore, complaint.status);
               
               // Add deterministic jitter so markers at the exact same location don't perfectly overlap
-              const hash = complaint.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+              const hash = (complaint.id || '').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
               const latJitter = ((hash % 100) - 50) * 0.00005; // approx +/- 5 meters
               const lngJitter = (((hash * 7) % 100) - 50) * 0.00005;
 
