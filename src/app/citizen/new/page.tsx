@@ -43,6 +43,48 @@ export default function NewComplaintPage() {
     setPreviewUrl(null);
   };
 
+  // Helper function to compress image in browser using canvas
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG with 0.6 quality to ensure it fits in Firestore 1MB limit
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<ComplaintFormValues>({
     resolver: zodResolver(complaintSchema),
     defaultValues: {
@@ -116,22 +158,10 @@ export default function NewComplaintPage() {
       let uploadedImageUrls: string[] = [];
 
       if (imageFile) {
-        // Bypass Firebase Storage completely to avoid billing/upgrade issues.
-        // Instead, upload directly to our Next.js API which saves to the local public/uploads folder.
-        const formData = new FormData();
-        formData.append("file", imageFile);
-
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadRes.ok) throw new Error("Local image upload failed");
-        
-        const uploadData = await uploadRes.json();
-        if (uploadData.success && uploadData.url) {
-          uploadedImageUrls.push(uploadData.url);
-        }
+        // Compress image in browser to bypass Vercel file system limits and Firebase Storage requirements
+        // We will send it as a Base64 string directly to Firestore (compressed to < 1MB)
+        const base64Image = await compressImage(imageFile);
+        uploadedImageUrls.push(base64Image);
       }
 
       // Then send the data to our Next.js API route to trigger the Gemini pipeline
