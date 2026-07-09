@@ -79,10 +79,10 @@ export default function NotificationsPage() {
                 className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="p-5 sm:p-6 flex flex-col sm:flex-row gap-6">
-                  {issue.imageUrl && (
+                  {issue.imageURLs?.[0] && (
                     <div className="w-full sm:w-48 h-32 relative rounded-lg overflow-hidden shrink-0 bg-slate-100">
                       <Image 
-                        src={issue.imageUrl} 
+                        src={issue.imageURLs[0]} 
                         alt="Issue resolution" 
                         fill 
                         className="object-cover"
