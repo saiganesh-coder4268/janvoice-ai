@@ -77,13 +77,15 @@ export default function TopBar({ tabs = [] }: TopBarProps) {
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-4 ml-auto">
-          <button className="text-slate-500 hover:text-slate-900 transition-colors">
+          <Link href="/search" className="text-slate-500 hover:text-slate-900 transition-colors">
             <Search className="h-5 w-5" />
-          </button>
-          <button className="text-slate-500 hover:text-slate-900 transition-colors relative">
+          </Link>
+          
+          <Link href="/notifications" className="text-slate-500 hover:text-slate-900 transition-colors relative flex items-center justify-center">
             <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border-2 border-white" />
-          </button>
+            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white" />
+          </Link>
+          
           <div className="flex items-center gap-2 border-l border-slate-200 pl-4 ml-2">
             {user ? (
               <div className="flex items-center gap-3">

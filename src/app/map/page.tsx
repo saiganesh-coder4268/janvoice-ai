@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
-import { collection, query, orderBy, getDocs, limit } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
 import TopBar from "@/components/layout/TopBar";
@@ -23,17 +23,15 @@ export default function PublicMapPage() {
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
 
   useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const q = query(collection(db, "complaints"), orderBy("createdAt", "desc"), limit(100));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Complaint));
-        setComplaints(data);
-      } catch (error) {
-        console.error("Failed to fetch complaints", error);
-      }
-    };
-    fetchComplaints();
+    const q = query(collection(db, "complaints"), orderBy("createdAt", "desc"), limit(200));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Complaint));
+      setComplaints(data);
+    }, (error: any) => {
+      console.error("Failed to fetch complaints", error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const getMarkerStyle = (priorityScore: number, status: string) => {
@@ -80,10 +78,16 @@ export default function PublicMapPage() {
           >
             {complaints.map((complaint) => {
               const style = getMarkerStyle(complaint.priorityScore, complaint.status);
+              
+              // Add deterministic jitter so markers at the exact same location don't perfectly overlap
+              const hash = (complaint.id || '').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+              const latJitter = ((hash % 100) - 50) * 0.00005; // approx +/- 5 meters
+              const lngJitter = (((hash * 7) % 100) - 50) * 0.00005;
+              
               return (
                 <AdvancedMarker 
                   key={complaint.id}
-                  position={{ lat: complaint.location.lat, lng: complaint.location.lng }}
+                  position={{ lat: Number(complaint.location.lat) + latJitter, lng: Number(complaint.location.lng) + lngJitter }}
                   title={complaint.title}
                   onClick={() => setActiveComplaint(complaint)}
                 >

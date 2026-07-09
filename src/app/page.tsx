@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Map } from "lucide-react";
 
 import { AnimatedSections } from "@/components/home/AnimatedSections";
+import { ScrollImpactSection } from "@/components/home/ScrollImpactSection";
 
 const landingTabs = [
   { name: "How It Works", href: "/#how-it-works" },
@@ -51,9 +52,10 @@ export default function LandingPage() {
         </section>
 
         <AnimatedSections />
+        <ScrollImpactSection />
       </main>
 
-      <footer className="w-full py-6 bg-slate-900 text-slate-400 text-center">
+      <footer className="w-full py-6 bg-slate-900 text-slate-400 text-center relative z-10">
         <p className="text-sm">MADE FOR INDIA. POWERED BY STRAWHATS</p>
       </footer>
     </div>

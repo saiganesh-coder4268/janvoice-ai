@@ -9,6 +9,7 @@ JanVoice AI is a civic-tech platform designed specifically for Visakhapatnam (Vi
 3. **Smart Prioritization**: The system calculates a Priority Score (0-100) based on the severity of the issue, its proximity to schools or hospitals, and the real population density of the specific GVMC ward.
 4. **MP Dashboard**: Elected officials view a real-time heat map of Vizag and a sorted list of the most critical issues to address first.
 5. **Resolution Gallery**: Once an issue is fixed, AI verifies the "Before and After" photos, providing a public gallery of verified improvements.
+6. **Interactive Before/After Slider**: The landing page features a dynamic, interactive image slider to visually showcase successful civic improvements (e.g., fixed potholes and clean roads) in real-time.
 
 ## 🛠️ Tech Stack
 
