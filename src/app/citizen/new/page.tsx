@@ -127,9 +127,9 @@ export default function NewComplaintPage() {
                 if (foundWard) break;
               }
               
-              // Fallback to Ward 2 (Madhurawada) if no locality matched (to ensure the demo always works for judges)
+              // Fallback to "other" if no locality matched (to allow issues from outside Vizag)
               if (!foundWard) {
-                foundWard = "2";
+                foundWard = "other";
               }
               
               setValue("ward", foundWard);
@@ -164,6 +164,30 @@ export default function NewComplaintPage() {
         uploadedImageUrls.push(base64Image);
       }
 
+      let finalLat = locationMock?.lat;
+      let finalLng = locationMock?.lng;
+
+      // If locationMock wasn't set via "Use Current Location", try geocoding the entered address
+      if (!finalLat || !finalLng) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(data.address)}`, {
+            headers: { 'User-Agent': 'janvoice-ai-prototype' }
+          });
+          const geodata = await res.json();
+          if (geodata && geodata.length > 0) {
+            finalLat = parseFloat(geodata[0].lat);
+            finalLng = parseFloat(geodata[0].lon);
+          } else {
+            finalLat = 17.6868;
+            finalLng = 83.2185;
+          }
+        } catch (error) {
+          console.error("Geocoding failed in submit", error);
+          finalLat = 17.6868;
+          finalLng = 83.2185;
+        }
+      }
+
       // Then send the data to our Next.js API route to trigger the Gemini pipeline
       const response = await fetch("/api/complaints", {
         method: "POST",
@@ -172,8 +196,8 @@ export default function NewComplaintPage() {
           description: data.description,
           imageURLs: uploadedImageUrls,
           location: {
-            lat: locationMock?.lat || 17.6868,
-            lng: locationMock?.lng || 83.2185,
+            lat: finalLat,
+            lng: finalLng,
             address: data.address,
             ward: data.ward
           },
@@ -250,9 +274,11 @@ export default function NewComplaintPage() {
               {...register("ward")}
               className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
             >
-              <option value="">Select a ward</option>
+              <option value="">Select a ward or area</option>
               {gvmcWards.map(w => (
-                <option key={w.wardNumber} value={w.wardNumber}>Ward {w.wardNumber} ({w.wardName})</option>
+                <option key={w.wardNumber} value={w.wardNumber}>
+                  {w.wardNumber === "other" ? w.wardName : `Ward ${w.wardNumber} (${w.wardName})`}
+                </option>
               ))}
             </select>
             {errors.ward && <p className="text-red-500 text-sm">{errors.ward.message}</p>}

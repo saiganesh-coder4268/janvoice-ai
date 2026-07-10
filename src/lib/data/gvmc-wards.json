@@ -33,5 +33,12 @@
     "localities": ["Sample Locality B"],
     "population": 12000,
     "densityTier": "Low"
+  },
+  {
+    "wardNumber": "other",
+    "wardName": "Other Location / Outside City",
+    "localities": [],
+    "population": 0,
+    "densityTier": "Low"
   }
 ]

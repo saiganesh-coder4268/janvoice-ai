@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import { collection, query, orderBy, onSnapshot, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
@@ -9,8 +9,34 @@ import { AlertCircle, X, MapPin, Maximize2, Minimize2, Clock } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
-// Strictly Visakhapatnam center
+// Strictly Visakhapatnam center fallback
 const VIZAG_CENTER = { lat: 17.6868, lng: 83.2185 };
+
+function MapBoundsFitter({ complaints }: { complaints: Complaint[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (map && complaints && complaints.length > 0 && window.google?.maps) {
+      const bounds = new window.google.maps.LatLngBounds();
+      let hasValidPoints = false;
+      
+      complaints.forEach(c => {
+        const lat = Number(c.location?.lat);
+        const lng = Number(c.location?.lng);
+        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+          bounds.extend({ lat, lng });
+          hasValidPoints = true;
+        }
+      });
+
+      if (hasValidPoints) {
+        map.fitBounds(bounds, 50); // 50px padding so dots aren't cut off
+      }
+    }
+  }, [map, complaints]);
+
+  return null;
+}
 
 export default function FullMapPage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -43,7 +69,7 @@ export default function FullMapPage() {
     if (status === 'resolved') return '#00FF40'; // neon green
     if (priorityScore >= 70) return '#FF003C'; // sharp red
     if (priorityScore >= 45) return '#FF9D00'; // sharp orange
-    return '#00D0FF'; // cyan
+    return '#A855F7'; // purple
   };
 
   const formatTime = (timestamp: any) => {
@@ -64,8 +90,8 @@ export default function FullMapPage() {
           defaultZoom={13}
           mapId="DEMO_FULL_MAP_ID"
           disableDefaultUI={false}
-          minZoom={11} // Prevent zooming out of Vizag area
         >
+          <MapBoundsFitter complaints={complaints} />
           {complaints.map((complaint) => {
             // Add deterministic jitter so markers at the exact same location don't perfectly overlap
             const hash = (complaint.id || '').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
@@ -206,7 +232,7 @@ export default function FullMapPage() {
             <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
           </div>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,208,255,0.8)]" style={{ backgroundColor: '#00D0FF' }}></span> Low (0-44)
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.8)]" style={{ backgroundColor: '#A855F7' }}></span> Low (0-44)
           </div>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
             <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved

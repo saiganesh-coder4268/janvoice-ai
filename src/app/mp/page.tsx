@@ -5,19 +5,80 @@ import { APIProvider, Map, AdvancedMarker, useMap, Pin } from "@vis.gl/react-goo
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
-import { MoreHorizontal, Lightbulb, MapPin, Search, AlertCircle } from "lucide-react";
+import { MoreHorizontal, Lightbulb, MapPin, Search, AlertCircle, X } from "lucide-react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 const VIZAG_CENTER = { lat: 17.6868, lng: 83.2185 };
 
-function MapController({ center, zoom }: { center: { lat: number, lng: number } | null, zoom: number }) {
-  const map = useMap("DEMO_MAP_ID");
+function MapController({ center, zoom, complaints }: { center: { lat: number, lng: number } | null, zoom: number, complaints?: Complaint[] }) {
+  const map = useMap();
+  
+  // Handle click panning with smooth cinematic fly-to animation
   useEffect(() => {
     if (map && center) {
-      map.panTo(center);
-      map.setZoom(zoom);
+      const startZoom = map.getZoom() || 13;
+      const startCenter = map.getCenter();
+      if (!startCenter) {
+        map.panTo(center);
+        map.setZoom(zoom);
+        return;
+      }
+
+      const startLat = startCenter.lat();
+      const startLng = startCenter.lng();
+      
+      const frames = 45; // ~750ms at 60fps
+      let frame = 0;
+      
+      const animate = () => {
+        frame++;
+        const progress = frame / frames;
+        // Ease in-out cubic interpolation
+        const ease = progress < 0.5 
+          ? 4 * progress * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        
+        const currentLat = startLat + (center.lat - startLat) * ease;
+        const currentLng = startLng + (center.lng - startLng) * ease;
+        const currentZoom = startZoom + (zoom - startZoom) * ease;
+        
+        map.moveCamera({
+          center: { lat: currentLat, lng: currentLng },
+          zoom: currentZoom
+        });
+        
+        if (frame < frames) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      requestAnimationFrame(animate);
     }
   }, [map, center, zoom]);
+
+  // Fit bounds to show all complaints if no specific center is active
+  useEffect(() => {
+    if (map && complaints && complaints.length > 0 && !center && window.google?.maps) {
+      const bounds = new window.google.maps.LatLngBounds();
+      let hasValidPoints = false;
+      
+      complaints.forEach(c => {
+        const lat = Number(c.location?.lat);
+        const lng = Number(c.location?.lng);
+        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+          bounds.extend({ lat, lng });
+          hasValidPoints = true;
+        }
+      });
+
+      if (hasValidPoints) {
+        map.fitBounds(bounds, 50); // 50px padding so dots aren't cut off
+      }
+    }
+  }, [map, complaints, center]);
+
   return null;
 }
 
@@ -27,6 +88,7 @@ export default function MPDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const [activeCenter, setActiveCenter] = useState<{ lat: number, lng: number } | null>(null);
+  const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, "complaints"), orderBy("priorityScore", "desc"));
@@ -52,7 +114,7 @@ export default function MPDashboard() {
     } else if (priorityScore >= 45) {
       return { bg: '#FF9D00', glow: '0 0 12px rgba(255,157,0,0.8)', blink: true };
     } else {
-      return { bg: '#00D0FF', glow: '0 0 10px rgba(0,208,255,0.7)', blink: true };
+      return { bg: '#A855F7', glow: '0 0 10px rgba(168,85,247,0.7)', blink: true };
     }
   };
 
@@ -60,7 +122,7 @@ export default function MPDashboard() {
     if (status === 'resolved') return '#00FF40';
     if (priorityScore >= 70) return '#FF003C';
     if (priorityScore >= 45) return '#FF9D00';
-    return '#00D0FF';
+    return '#A855F7';
   };
 
   return (
@@ -73,9 +135,8 @@ export default function MPDashboard() {
             defaultZoom={13}
             mapId="DEMO_MAP_ID"
             disableDefaultUI={false}
-            minZoom={11} // Prevent zooming out too far from Vizag
           >
-            <MapController center={activeCenter} zoom={16} />
+            <MapController center={activeCenter} zoom={16} complaints={complaints} />
             {complaints.map((complaint) => {
               const style = getMarkerStyle(complaint.priorityScore, complaint.status);
               
@@ -84,25 +145,85 @@ export default function MPDashboard() {
               const latJitter = ((hash % 100) - 50) * 0.00005; // approx +/- 5 meters
               const lngJitter = (((hash * 7) % 100) - 50) * 0.00005;
 
+              const lat = Number(complaint.location?.lat);
+              const lng = Number(complaint.location?.lng);
+              
+              if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return null;
+
               return (
                 <AdvancedMarker 
                   key={complaint.id}
-                  position={{ lat: Number(complaint.location.lat) + latJitter, lng: Number(complaint.location.lng) + lngJitter }}
+                  position={{ lat: lat + latJitter, lng: lng + lngJitter }}
                   title={complaint.title}
+                  onClick={() => setActiveComplaint(complaint)}
                 >
-                  <div className="relative cursor-pointer hover:scale-110 transition-transform">
+                  <div 
+                    className={`w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-all`}
+                    style={{ 
+                      backgroundColor: style.bg,
+                      boxShadow: style.glow 
+                    }}
+                  >
                     {style.blink && (
                       <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: style.bg }}></div>
                     )}
-                    <div style={{ boxShadow: style.glow, borderRadius: '50%', backgroundColor: 'white', padding: '2px' }}>
-                      <Pin background={style.bg} borderColor={style.bg} glyphColor="#fff" scale={1.1} />
-                    </div>
                   </div>
                 </AdvancedMarker>
               );
             })}
           </Map>
         </APIProvider>
+
+        {/* Animated Issue Card Overlay */}
+        <AnimatePresence>
+          {activeComplaint && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="absolute top-6 right-6 w-80 bg-white/90 backdrop-blur-xl p-5 rounded-2xl shadow-2xl border border-white/50 z-50 overflow-hidden"
+            >
+              <button 
+                onClick={() => setActiveComplaint(null)}
+                className="absolute top-3 right-3 p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              
+              <div className="mb-3 pr-6">
+                <h3 className="font-bold text-slate-900 text-lg leading-tight">{activeComplaint.title}</h3>
+                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 shrink-0" /> {activeComplaint.location.address}
+                </p>
+              </div>
+
+              {activeComplaint.imageURLs && activeComplaint.imageURLs.length > 0 && (
+                <div className="relative w-full h-32 rounded-xl overflow-hidden mb-3 shadow-inner">
+                  <Image 
+                    src={activeComplaint.imageURLs[0]} 
+                    alt="Issue photo" 
+                    fill 
+                    className="object-cover"
+                  />
+                </div>
+              )}
+
+              <p className="text-sm text-slate-600 line-clamp-3 mb-4">
+                {activeComplaint.description}
+              </p>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${activeComplaint.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {activeComplaint.status.toUpperCase()}
+                </span>
+                <span className="text-xs font-medium text-slate-400">
+                  Priority: <span className="text-slate-700 font-bold">{activeComplaint.priorityScore}</span>
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Floating Legend */}
         <div className="absolute bottom-6 left-6 bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 z-10 hidden sm:block">
@@ -115,7 +236,7 @@ export default function MPDashboard() {
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(0,208,255,0.8)]" style={{ backgroundColor: '#00D0FF' }}></span> Low (0-44)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" style={{ backgroundColor: '#A855F7' }}></span> Low (0-44)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved
@@ -180,7 +301,10 @@ export default function MPDashboard() {
               complaints.slice(0, 5).map((complaint) => (
                 <div 
                   key={complaint.id} 
-                  onClick={() => setActiveCenter({ lat: complaint.location.lat, lng: complaint.location.lng })}
+                  onClick={() => {
+                    setActiveCenter({ lat: Number(complaint.location.lat), lng: Number(complaint.location.lng) });
+                    setActiveComplaint(complaint);
+                  }}
                   className="flex gap-3 items-start group p-2 -mx-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   <span className="w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: getPriorityBgColor(complaint.priorityScore, complaint.status) }}></span>
