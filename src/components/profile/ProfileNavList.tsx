@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { useUIStore } from "@/store/useUIStore";
 import { FileText, ChevronRight } from "lucide-react";
+import { LucideIcon } from "lucide-react";
+
+type NavItem = {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  badge?: string | number;
+};
 
 export default function ProfileNavList() {
   const closeProfilePanel = useUIStore((state) => state.closeProfilePanel);
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { icon: FileText, label: "My Complaints", href: "/my-complaints" },
   ];
 
