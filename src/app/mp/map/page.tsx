@@ -83,7 +83,7 @@ export default function FullMapPage() {
   };
 
   return (
-    <div className="flex-1 relative bg-slate-100 h-full w-full overflow-hidden">
+    <div className="flex-1 relative bg-muted h-full w-full overflow-hidden">
       <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
         <Map
           defaultCenter={VIZAG_CENTER}
@@ -123,17 +123,17 @@ export default function FullMapPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute top-0 right-0 h-full bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.1)] z-50 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
+            className={`absolute top-0 right-0 h-full bg-card shadow-[-10px_0_30px_rgba(0,0,0,0.1)] z-50 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
               isExpanded ? "w-full md:w-[600px] lg:w-[800px]" : "w-full max-w-sm sm:w-96"
             }`}
           >
             {/* Header */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-10">
-              <h2 className="font-bold text-lg text-slate-800 line-clamp-1 pr-2">{activeComplaint.title}</h2>
+            <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-card/90 backdrop-blur-md z-10">
+              <h2 className="font-bold text-lg text-foreground line-clamp-1 pr-2">{activeComplaint.title}</h2>
               <div className="flex items-center gap-1 shrink-0">
                  <button 
                    onClick={() => setIsExpanded(!isExpanded)} 
-                   className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"
+                   className="p-2 hover:bg-muted rounded-full text-muted-foreground transition-colors"
                    title={isExpanded ? "Collapse View" : "Expand View"}
                  >
                    {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -150,7 +150,7 @@ export default function FullMapPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
               {/* Main Image */}
               {activeComplaint.imageURLs && activeComplaint.imageURLs.length > 0 && (
-                <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm bg-slate-100 transition-all duration-300 ${isExpanded ? "h-[400px] md:h-[500px]" : "h-56"}`}>
+                <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm bg-muted transition-all duration-300 ${isExpanded ? "h-[400px] md:h-[500px]" : "h-56"}`}>
                    <Image 
                      src={activeComplaint.imageURLs[0]} 
                      alt={activeComplaint.title} 
@@ -162,29 +162,29 @@ export default function FullMapPage() {
               
               {/* Info Grid */}
               <div className={`grid gap-4 text-sm ${isExpanded ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-2"}`}>
-                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                   <p className="text-slate-500 text-xs mb-1 flex items-center gap-1.5"><Clock size={14}/> Reported At</p>
-                   <p className="font-medium text-slate-800">
+                 <div className="bg-muted p-3 rounded-xl border border-border">
+                   <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1.5"><Clock size={14}/> Reported At</p>
+                   <p className="font-medium text-foreground">
                      {formatTime(activeComplaint.createdAt)}
                    </p>
                  </div>
-                 <div className={`bg-slate-50 p-3 rounded-xl border border-slate-100 ${isExpanded ? "lg:col-span-3" : "col-span-1 sm:col-span-1"}`}>
-                   <p className="text-slate-500 text-xs mb-1 flex items-center gap-1.5"><MapPin size={14}/> Location</p>
-                   <p className="font-medium text-slate-800 line-clamp-2" title={activeComplaint.location.address}>
+                 <div className={`bg-muted p-3 rounded-xl border border-border ${isExpanded ? "lg:col-span-3" : "col-span-1 sm:col-span-1"}`}>
+                   <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1.5"><MapPin size={14}/> Location</p>
+                   <p className="font-medium text-foreground line-clamp-2" title={activeComplaint.location.address}>
                      {activeComplaint.location.address}
                    </p>
                  </div>
               </div>
 
               {/* Categories/Tags */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
                  <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold capitalize border border-blue-100">
                    {activeComplaint.category}
                  </span>
                  <span className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize border ${
                    activeComplaint.status === 'resolved' ? 'bg-green-50 text-green-700 border-green-100' : 
                    activeComplaint.status === 'under_review' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
-                   'bg-slate-50 text-slate-700 border-slate-200'
+                   'bg-muted text-muted-foreground border-border'
                  }`}>
                    {activeComplaint.status.replace('_', ' ')}
                  </span>
@@ -199,8 +199,8 @@ export default function FullMapPage() {
 
               {/* Description */}
               <div>
-                 <h3 className="text-sm font-semibold text-slate-900 mb-2">Description</h3>
-                 <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap bg-slate-50/50 p-4 rounded-xl border border-slate-50">
+                 <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
+                 <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap bg-muted/50 p-4 rounded-xl border border-slate-50">
                    {activeComplaint.description}
                  </p>
               </div>
@@ -208,10 +208,10 @@ export default function FullMapPage() {
               {/* If translated text exists and is different, optionally show it */}
               {activeComplaint.translatedText && activeComplaint.originalLanguage !== 'en' && activeComplaint.translatedText !== activeComplaint.description && (
                  <div>
-                   <h3 className="text-sm font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                   <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                      Translation ({activeComplaint.originalLanguage})
                    </h3>
-                   <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap bg-indigo-50/50 p-4 rounded-xl border border-indigo-50">
+                   <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap bg-indigo-50/50 p-4 rounded-xl border border-indigo-50">
                      {activeComplaint.translatedText}
                    </p>
                  </div>
@@ -222,19 +222,19 @@ export default function FullMapPage() {
       </AnimatePresence>
 
       {/* Floating Legend */}
-      <div className="absolute bottom-6 left-6 bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 z-10 hidden sm:block">
-        <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
+      <div className="absolute bottom-6 left-6 bg-card p-3 sm:p-4 rounded-xl shadow-lg border border-border z-10 hidden sm:block">
+        <h4 className="text-[10px] sm:text-xs font-bold text-foreground uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
         <div className="flex flex-col gap-1.5 sm:gap-2">
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(255,0,60,0.8)]" style={{ backgroundColor: '#FF003C' }}></span> High (70-100)
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.8)]" style={{ backgroundColor: '#A855F7' }}></span> Low (0-44)
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function FullMapPage() {
 
       {/* Error / Empty State Overlay */}
       {(!loading && complaints.length === 0) && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-lg border border-orange-200 flex items-center gap-2 z-10 text-orange-700 font-medium text-sm">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card px-6 py-3 rounded-full shadow-lg border border-orange-200 flex items-center gap-2 z-10 text-orange-700 font-medium text-sm">
           <AlertCircle className="h-5 w-5" />
           No issues found on the map. (Did you run the seed script?)
         </div>

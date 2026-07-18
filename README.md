@@ -1,4 +1,4 @@
-# JanVoice AI — The Voice of Visakhapatnam's Civic Evolution
+# JanVoice AI 
 
 > *"A city's true beauty lies not just in its landscapes, but in the civic consciousness of its people."*
 

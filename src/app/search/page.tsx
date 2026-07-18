@@ -50,7 +50,7 @@ export default function SearchPage() {
       case 'resolved': return 'bg-green-100 text-green-700 border-green-200';
       case 'under_review': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'assigned': return 'bg-blue-100 text-blue-700 border-blue-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      default: return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -70,13 +70,13 @@ export default function SearchPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col">
+    <main className="min-h-screen bg-muted flex flex-col">
       <TopBar />
       
       <div className="flex-1 max-w-3xl w-full mx-auto p-4 md:p-8 mt-12">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-3">Search Civic Platform</h1>
-          <p className="text-slate-500">Find issues by location, category, or tracking ID</p>
+          <h1 className="text-3xl font-bold text-foreground mb-3">Search Civic Platform</h1>
+          <p className="text-muted-foreground">Find issues by location, category, or tracking ID</p>
         </div>
 
         <div className="relative mb-8 shadow-sm rounded-2xl overflow-hidden">
@@ -85,7 +85,7 @@ export default function SearchPage() {
           </div>
           <input
             type="text"
-            className="w-full pl-12 pr-4 py-5 text-lg bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-slate-400"
+            className="w-full pl-12 pr-4 py-5 text-lg bg-card border border-border rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-slate-400"
             placeholder="Search for 'pothole', 'MVP Colony', or 'JV-123'..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -98,35 +98,35 @@ export default function SearchPage() {
           </div>
         ) : !searchQuery ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <div className="bg-card p-5 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer">
               <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-3">
                 <MapPin className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-slate-900 mb-1">By Location</h3>
-              <p className="text-xs text-slate-500">Search for issues near a specific address or neighborhood.</p>
+              <h3 className="font-semibold text-foreground mb-1">By Location</h3>
+              <p className="text-xs text-muted-foreground">Search for issues near a specific address or neighborhood.</p>
             </div>
             
-            <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <div className="bg-card p-5 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer">
               <div className="h-10 w-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mb-3">
                 <Tag className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-slate-900 mb-1">By Category</h3>
-              <p className="text-xs text-slate-500">Find specific types of complaints like roads, waste, or water.</p>
+              <h3 className="font-semibold text-foreground mb-1">By Category</h3>
+              <p className="text-xs text-muted-foreground">Find specific types of complaints like roads, waste, or water.</p>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <div className="bg-card p-5 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer">
               <div className="h-10 w-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-3">
                 <FileText className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-slate-900 mb-1">By Issue ID</h3>
-              <p className="text-xs text-slate-500">Track the exact status of a specific complaint using its ID.</p>
+              <h3 className="font-semibold text-foreground mb-1">By Issue ID</h3>
+              <p className="text-xs text-muted-foreground">Track the exact status of a specific complaint using its ID.</p>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             {results.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
-                <p className="text-slate-500">No issues found matching "{searchQuery}"</p>
+              <div className="text-center py-12 bg-card rounded-xl border border-border border-dashed">
+                <p className="text-muted-foreground">No issues found matching "{searchQuery}"</p>
               </div>
             ) : (
               results.map((issue, i) => (
@@ -135,11 +135,11 @@ export default function SearchPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   key={issue.id} 
-                  className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow"
+                  className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
                     {issue.imageURLs?.[0] && (
-                      <div className="w-full sm:w-32 h-24 relative rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                      <div className="w-full sm:w-32 h-24 relative rounded-lg overflow-hidden shrink-0 bg-muted">
                         <Image 
                           src={issue.imageURLs[0]} 
                           alt={issue.title}
@@ -151,7 +151,7 @@ export default function SearchPage() {
                     
                     <div className="flex-1 flex flex-col justify-center">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-base text-slate-900 line-clamp-1">
+                        <h3 className="font-semibold text-base text-foreground line-clamp-1">
                           {issue.title}
                         </h3>
                         <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(issue.status)} shrink-0`}>
@@ -160,10 +160,10 @@ export default function SearchPage() {
                         </div>
                       </div>
                       
-                      <p className="text-sm text-slate-500 line-clamp-1 mb-3">{issue.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1 mb-3">{issue.description}</p>
                       
-                      <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500">
-                        <div className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md text-slate-600">
+                      <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted-foreground">
+                        <div className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md text-muted-foreground">
                           <MapPin className="h-3 w-3" />
                           <span className="truncate max-w-[150px]">{issue.location?.address || "Unknown"}</span>
                         </div>

@@ -1,19 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { APIProvider, Map, AdvancedMarker, useMap, Pin } from "@vis.gl/react-google-maps";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Complaint } from "@/types";
-import { MoreHorizontal, Lightbulb, MapPin, Search, AlertCircle, X } from "lucide-react";
+import { MoreHorizontal, Lightbulb, MapPin, Search, AlertCircle, X, Info } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 const VIZAG_CENTER = { lat: 17.6868, lng: 83.2185 };
 
-function MapController({ center, zoom, complaints }: { center: { lat: number, lng: number } | null, zoom: number, complaints?: Complaint[] }) {
+function MapController({ center, zoom, complaints, onZoomChange }: { center: { lat: number, lng: number } | null, zoom: number, complaints?: Complaint[], onZoomChange: (z: number) => void }) {
   const map = useMap();
+  
+  // Track zoom level for dynamic marker sizing
+  useEffect(() => {
+    if (map) {
+      const listener = map.addListener('zoom_changed', () => {
+        onZoomChange(map.getZoom() || 13);
+      });
+      return () => {
+        if (window.google?.maps) {
+          window.google.maps.event.removeListener(listener);
+        }
+      };
+    }
+  }, [map, onZoomChange]);
   
   // Handle click panning with smooth cinematic fly-to animation
   useEffect(() => {
@@ -89,6 +103,29 @@ export default function MPDashboard() {
 
   const [activeCenter, setActiveCenter] = useState<{ lat: number, lng: number } | null>(null);
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
+  const [globalZoom, setGlobalZoom] = useState(13);
+
+  const [showLegend, setShowLegend] = useState(true);
+  const legendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetLegendTimeout = () => {
+    setShowLegend(true);
+    if (legendTimeoutRef.current) clearTimeout(legendTimeoutRef.current);
+    legendTimeoutRef.current = setTimeout(() => {
+      setShowLegend(false);
+    }, 5000);
+  };
+
+  useEffect(() => {
+    resetLegendTimeout();
+    return () => {
+      if (legendTimeoutRef.current) clearTimeout(legendTimeoutRef.current);
+    };
+  }, []);
+
+  const [insights, setInsights] = useState<string[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [hasFetchedInsights, setHasFetchedInsights] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, "complaints"), orderBy("priorityScore", "desc"));
@@ -105,20 +142,47 @@ export default function MPDashboard() {
     return () => unsubscribe();
   }, []);
 
-  const getMarkerStyle = (priorityScore: number, status: string) => {
+  const getMarkerStyle = (score: number | string, status: string) => {
+    const priorityScore = Number(score) || 0;
     if (status === 'resolved') {
-      return { bg: '#00FF40', glow: '0 0 10px rgba(0,255,64,0.6)', blink: false };
+      return { bg: '#00FF40', glow: '0 0 8px rgba(0,255,64,0.6)', blink: true };
     }
     if (priorityScore >= 70) {
-      return { bg: '#FF003C', glow: '0 0 15px rgba(255,0,60,0.9)', blink: true };
+      return { bg: '#FF003C', glow: '0 0 10px rgba(255,0,60,0.8)', blink: true };
     } else if (priorityScore >= 45) {
-      return { bg: '#FF9D00', glow: '0 0 12px rgba(255,157,0,0.8)', blink: true };
+      return { bg: '#FF9D00', glow: '0 0 8px rgba(255,157,0,0.6)', blink: true };
     } else {
-      return { bg: '#A855F7', glow: '0 0 10px rgba(168,85,247,0.7)', blink: true };
+      return { bg: '#A855F7', glow: '0 0 6px rgba(168,85,247,0.5)', blink: true };
     }
   };
 
-  const getPriorityBgColor = (priorityScore: number, status: string) => {
+  useEffect(() => {
+    if (complaints.length > 0 && !hasFetchedInsights && !loadingInsights) {
+      setLoadingInsights(true);
+      setHasFetchedInsights(true); // Lock it so it never loops
+      fetch('/api/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ complaints: complaints.slice(0, 15) }) // Send top 15 issues
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.recommendations && data.recommendations.length > 0) {
+          setInsights(data.recommendations);
+        } else {
+          setInsights(["Work with sanitation crews to maintain consistent pickup schedules.", "Monitor local reporting for emerging infrastructure risks."]);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load insights", err);
+        setInsights(["Work with sanitation crews to maintain consistent pickup schedules.", "Monitor local reporting for emerging infrastructure risks."]);
+      })
+      .finally(() => setLoadingInsights(false));
+    }
+  }, [complaints, hasFetchedInsights, loadingInsights]);
+
+  const getPriorityBgColor = (score: number | string, status: string) => {
+    const priorityScore = Number(score) || 0;
     if (status === 'resolved') return '#00FF40';
     if (priorityScore >= 70) return '#FF003C';
     if (priorityScore >= 45) return '#FF9D00';
@@ -128,7 +192,10 @@ export default function MPDashboard() {
   return (
     <div className="flex flex-col lg:flex-row w-full h-full overflow-hidden">
       {/* Map Section */}
-      <div className="flex-1 relative bg-slate-100 min-h-[50vh]">
+      <div 
+        className="flex-1 relative bg-muted min-h-[50vh]"
+        onMouseMove={resetLegendTimeout}
+      >
         <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
           <Map
             defaultCenter={VIZAG_CENTER}
@@ -136,9 +203,17 @@ export default function MPDashboard() {
             mapId="DEMO_MAP_ID"
             disableDefaultUI={false}
           >
-            <MapController center={activeCenter} zoom={16} complaints={complaints} />
-            {complaints.map((complaint) => {
+            <MapController center={activeCenter} zoom={16} complaints={complaints} onZoomChange={setGlobalZoom} />
+            {/* Sort complaints ascending so highest priority (and resolved) render ON TOP of low priority dots at the same location */}
+            {[...complaints].sort((a, b) => {
+              if (a.status === 'resolved' && b.status !== 'resolved') return 1;
+              if (b.status === 'resolved' && a.status !== 'resolved') return -1;
+              return (Number(a.priorityScore) || 0) - (Number(b.priorityScore) || 0);
+            }).map((complaint) => {
               const style = getMarkerStyle(complaint.priorityScore, complaint.status);
+              
+              // Dynamic marker sizing based on zoom (slightly larger than before)
+              const markerSize = globalZoom > 13 ? 'w-6 h-6 border-2' : globalZoom > 11 ? 'w-4 h-4 border-[1.5px]' : 'w-3 h-3 border-[1px]';
               
               // Add deterministic jitter so markers at the exact same location don't perfectly overlap
               const hash = (complaint.id || '').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
@@ -158,14 +233,14 @@ export default function MPDashboard() {
                   onClick={() => setActiveComplaint(complaint)}
                 >
                   <div 
-                    className={`w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-all`}
+                    className={`${markerSize} rounded-full border-white shadow-lg cursor-pointer hover:scale-110 transition-all`}
                     style={{ 
                       backgroundColor: style.bg,
                       boxShadow: style.glow 
                     }}
                   >
                     {style.blink && (
-                      <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: style.bg }}></div>
+                      <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: style.bg, animationDuration: '2s' }}></div>
                     )}
                   </div>
                 </AdvancedMarker>
@@ -182,18 +257,18 @@ export default function MPDashboard() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="absolute top-6 right-6 w-80 bg-white/90 backdrop-blur-xl p-5 rounded-2xl shadow-2xl border border-white/50 z-50 overflow-hidden"
+              className="absolute top-6 right-6 w-80 bg-card/90 backdrop-blur-xl p-5 rounded-2xl shadow-2xl border border-white/50 z-50 overflow-hidden"
             >
               <button 
                 onClick={() => setActiveComplaint(null)}
-                className="absolute top-3 right-3 p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors"
+                className="absolute top-3 right-3 p-1.5 bg-muted hover:bg-secondary text-muted-foreground rounded-full transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
               
               <div className="mb-3 pr-6">
-                <h3 className="font-bold text-slate-900 text-lg leading-tight">{activeComplaint.title}</h3>
-                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <h3 className="font-bold text-foreground text-lg leading-tight">{activeComplaint.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <MapPin className="h-3 w-3 shrink-0" /> {activeComplaint.location.address}
                 </p>
               </div>
@@ -209,16 +284,16 @@ export default function MPDashboard() {
                 </div>
               )}
 
-              <p className="text-sm text-slate-600 line-clamp-3 mb-4">
+              <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
                 {activeComplaint.description}
               </p>
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-border">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${activeComplaint.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                   {activeComplaint.status.toUpperCase()}
                 </span>
                 <span className="text-xs font-medium text-slate-400">
-                  Priority: <span className="text-slate-700 font-bold">{activeComplaint.priorityScore}</span>
+                  Priority: <span className="text-muted-foreground font-bold">{activeComplaint.priorityScore}</span>
                 </span>
               </div>
             </motion.div>
@@ -226,19 +301,27 @@ export default function MPDashboard() {
         </AnimatePresence>
 
         {/* Floating Legend */}
-        <div className="absolute bottom-6 left-6 bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-200 z-10 hidden sm:block">
-          <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 sm:mb-3">Priority Score</h4>
+        <div className={`absolute bottom-6 left-6 bg-card p-3 sm:p-4 rounded-xl shadow-lg border border-border z-10 hidden sm:block transition-opacity duration-700 ${showLegend ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="flex justify-between items-center mb-2 sm:mb-3">
+            <h4 className="text-[10px] sm:text-xs font-bold text-foreground uppercase tracking-wider">Priority Score</h4>
+            <div className="relative group ml-4">
+              <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-primary transition-colors" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-popover border text-popover-foreground text-xs rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none z-20">
+                Calculated dynamically by AI, combining issue severity with local Ward population density.
+              </div>
+            </div>
+          </div>
           <div className="flex flex-col gap-1.5 sm:gap-2">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,0,60,0.8)]" style={{ backgroundColor: '#FF003C' }}></span> High (70-100)
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" style={{ backgroundColor: '#A855F7' }}></span> Low (0-44)
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved
             </div>
           </div>
@@ -246,7 +329,7 @@ export default function MPDashboard() {
 
         {/* Error / Empty State Overlay */}
         {(!loading && complaints.length === 0) && (
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-lg border border-orange-200 flex items-center gap-2 z-10 text-orange-700 font-medium text-sm">
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card px-6 py-3 rounded-full shadow-lg border border-orange-200 flex items-center gap-2 z-10 text-orange-700 font-medium text-sm">
             <AlertCircle className="h-5 w-5" />
             No issues found on the map. (Did you run the seed script?)
           </div>
@@ -261,22 +344,41 @@ export default function MPDashboard() {
       </div>
 
       {/* Right Sidebar */}
-      <div className="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col h-1/2 lg:h-full overflow-y-auto">
+      <div className="w-full lg:w-96 bg-card border-t lg:border-t-0 lg:border-l border-border flex flex-col h-1/2 lg:h-full overflow-y-auto">
         
-        {/* AI Insights Panel */}
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">AI Development Recommendations</h2>
-          <div className="border border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50">
-            <Lightbulb className="h-10 w-10 text-slate-400 mb-3" />
-            <h3 className="font-semibold text-slate-700 mb-1">No active recommendations yet</h3>
-            <p className="text-sm text-slate-500">Gemini is analyzing civic data. Check back later.</p>
-          </div>
+        {/* Strategic Insights Panel */}
+        <div className="p-6 border-b border-border">
+          <h2 className="text-lg font-bold text-foreground mb-4">Strategic Development Insights</h2>
+          {loadingInsights ? (
+            <div className="border border-border rounded-xl p-8 flex flex-col items-center justify-center text-center bg-muted">
+              <Lightbulb className="h-10 w-10 text-slate-400 mb-3 animate-pulse" />
+              <h3 className="font-semibold text-muted-foreground mb-1">Analyzing civic data...</h3>
+              <p className="text-sm text-muted-foreground">Generating strategic recommendations based on current map issues.</p>
+            </div>
+          ) : insights.length > 0 ? (
+            <div className="space-y-3">
+              {insights.map((insight, idx) => (
+                <div key={idx} className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 text-sm text-slate-700 leading-relaxed">
+                  <div className="flex gap-2 items-start">
+                    <Lightbulb className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                    <span>{insight}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-border rounded-xl p-8 flex flex-col items-center justify-center text-center bg-muted">
+              <Lightbulb className="h-10 w-10 text-slate-400 mb-3" />
+              <h3 className="font-semibold text-muted-foreground mb-1">No active recommendations yet</h3>
+              <p className="text-sm text-muted-foreground">Insufficient data to generate strategic insights.</p>
+            </div>
+          )}
         </div>
 
         {/* Recent Issues List */}
         <div className="p-6 flex-1">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-slate-900">Recent Issues</h2>
+            <h2 className="text-lg font-bold text-foreground">Recent Issues</h2>
             <Link href="/mp/issues" className="text-sm text-blue-600 font-medium hover:underline">
               View all
             </Link>
@@ -287,16 +389,16 @@ export default function MPDashboard() {
               <div className="space-y-4">
                 {[1, 2, 3].map(i => (
                   <div key={i} className="animate-pulse flex gap-3">
-                    <div className="w-2 h-2 rounded-full bg-slate-200 mt-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-secondary mt-2"></div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-secondary rounded w-3/4"></div>
+                      <div className="h-3 bg-secondary rounded w-1/2"></div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : complaints.length === 0 ? (
-              <p className="text-sm text-slate-500">No issues found.</p>
+              <p className="text-sm text-muted-foreground">No issues found.</p>
             ) : (
               complaints.slice(0, 5).map((complaint) => (
                 <div 
@@ -305,22 +407,22 @@ export default function MPDashboard() {
                     setActiveCenter({ lat: Number(complaint.location.lat), lng: Number(complaint.location.lng) });
                     setActiveComplaint(complaint);
                   }}
-                  className="flex gap-3 items-start group p-2 -mx-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="flex gap-3 items-start group p-2 -mx-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                 >
                   <span className="w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: getPriorityBgColor(complaint.priorityScore, complaint.status) }}></span>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-semibold text-slate-900 truncate pr-2">{complaint.title}</h4>
-                      <button className="text-slate-400 hover:text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <h4 className="text-sm font-semibold text-foreground truncate pr-2">{complaint.title}</h4>
+                      <button className="text-slate-400 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate">
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">
                       <MapPin className="h-3 w-3 shrink-0" />
                       {complaint.location.address}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Priority Score: <span className="font-semibold text-slate-600">{complaint.priorityScore}</span>
+                      Priority Score: <span className="font-semibold text-muted-foreground">{complaint.priorityScore}</span>
                     </p>
                   </div>
                 </div>

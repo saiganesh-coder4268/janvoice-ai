@@ -12,7 +12,7 @@ export default function CitizenDashboard() {
   const { user, loading } = useAuth();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [fetching, setFetching] = useState(true);
-  const [activeTab, setActiveTab] = useState<'reported' | 'pending' | 'resolved'>('reported');
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'resolved'>('all');
 
   useEffect(() => {
     if (!loading && user) {
@@ -47,10 +47,10 @@ export default function CitizenDashboard() {
       <div className="flex justify-center p-12">
         <div className="animate-pulse flex space-x-4">
           <div className="flex-1 space-y-4 py-1">
-            <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+            <div className="h-4 bg-secondary rounded w-3/4"></div>
             <div className="space-y-2">
-              <div className="h-4 bg-slate-200 rounded"></div>
-              <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+              <div className="h-4 bg-secondary rounded"></div>
+              <div className="h-4 bg-secondary rounded w-5/6"></div>
             </div>
           </div>
         </div>
@@ -62,20 +62,20 @@ export default function CitizenDashboard() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
         <h2 className="text-2xl font-bold mb-4">Please Sign In</h2>
-        <p className="text-slate-600 mb-8 max-w-md">You need to sign in to view the public complaints and track issues in Visakhapatnam.</p>
+        <p className="text-muted-foreground mb-8 max-w-md">You need to sign in to view the public complaints and track issues in Visakhapatnam.</p>
       </div>
     );
   }
 
   // Filter complaints based on status
-  const reportedIssues = complaints.filter(c => c.status === 'reported');
-  const pendingIssues = complaints.filter(c => c.status === 'under_review' || c.status === 'assigned');
+  const allIssues = complaints;
+  const pendingIssues = complaints.filter(c => c.status !== 'resolved');
   const resolvedIssues = complaints.filter(c => c.status === 'resolved');
 
   const getActiveList = () => {
     switch (activeTab) {
-      case 'reported':
-        return reportedIssues;
+      case 'all':
+        return allIssues;
       case 'pending':
         return pendingIssues;
       case 'resolved':
@@ -87,15 +87,15 @@ export default function CitizenDashboard() {
 
   const getEmptyStateMessage = () => {
     switch (activeTab) {
-      case 'reported':
+      case 'all':
         return {
-          title: "No Reported Issues",
-          desc: "There are currently no newly reported civic issues. Everything is clean or undergoing review!"
+          title: "No Issues Found",
+          desc: "There are currently no civic issues reported in the system."
         };
       case 'pending':
         return {
           title: "No Pending Issues",
-          desc: "All reported complaints have been resolved or are up-to-date! No issues are currently pending."
+          desc: "All reported complaints have been resolved! No issues are currently pending."
         };
       case 'resolved':
         return {
@@ -109,7 +109,7 @@ export default function CitizenDashboard() {
     <div className="space-y-8 pb-16 sm:pb-0">
       {/* Floating Action Button for Mobile */}
       <div className="fixed bottom-6 right-6 sm:hidden z-40">
-        <Link href="/citizen/new" className="flex items-center justify-center h-14 w-14 bg-blue-600 text-white rounded-full shadow-[0_4px_20px_rgba(37,99,235,0.4)] hover:bg-blue-700 active:scale-95 transition-all">
+        <Link href="/citizen/new" className="flex items-center justify-center h-14 w-14 bg-blue-600 text-primary-foreground rounded-full shadow-[0_4px_20px_rgba(37,99,235,0.4)] hover:bg-blue-700 active:scale-95 transition-all">
           <Plus className="h-6 w-6" />
         </Link>
       </div>
@@ -117,32 +117,32 @@ export default function CitizenDashboard() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Public Complaints</h1>
-          <p className="text-slate-500 mt-1">Track reported, pending, and resolved community issues in Visakhapatnam.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Public Complaints</h1>
+          <p className="text-muted-foreground mt-1">Track reported, pending, and resolved community issues in Visakhapatnam.</p>
         </div>
-        <Link href="/citizen/new" className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shrink-0 shadow-sm">
+        <Link href="/citizen/new" className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-primary-foreground font-medium rounded-lg hover:bg-blue-700 transition-colors shrink-0 shadow-sm">
           <Plus className="h-5 w-5" />
           <span>Report Issue</span>
         </Link>
       </div>
 
       {/* Tabs Switcher */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-border">
         <div className="flex space-x-8 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <button
-            onClick={() => setActiveTab('reported')}
+            onClick={() => setActiveTab('all')}
             className={`flex items-center gap-2 pb-4 text-sm font-semibold border-b-2 transition-all ${
-              activeTab === 'reported'
+              activeTab === 'all'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             }`}
           >
-            <AlertCircle className="h-4.5 w-4.5" />
-            Reported Issues
+            <FileText className="h-4.5 w-4.5" />
+            All Issues
             <span className={`ml-1 px-2 py-0.5 text-xs font-semibold rounded-full ${
-              activeTab === 'reported' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+              activeTab === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'
             }`}>
-              {reportedIssues.length}
+              {allIssues.length}
             </span>
           </button>
 
@@ -151,13 +151,13 @@ export default function CitizenDashboard() {
             className={`flex items-center gap-2 pb-4 text-sm font-semibold border-b-2 transition-all ${
               activeTab === 'pending'
                 ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             }`}
           >
             <Clock className="h-4.5 w-4.5" />
             Pending Issues
             <span className={`ml-1 px-2 py-0.5 text-xs font-semibold rounded-full ${
-              activeTab === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+              activeTab === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'
             }`}>
               {pendingIssues.length}
             </span>
@@ -168,13 +168,13 @@ export default function CitizenDashboard() {
             className={`flex items-center gap-2 pb-4 text-sm font-semibold border-b-2 transition-all ${
               activeTab === 'resolved'
                 ? 'border-green-600 text-green-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             }`}
           >
             <CheckCircle className="h-4.5 w-4.5" />
             Resolved Issues
             <span className={`ml-1 px-2 py-0.5 text-xs font-semibold rounded-full ${
-              activeTab === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+              activeTab === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
             }`}>
               {resolvedIssues.length}
             </span>
@@ -184,17 +184,17 @@ export default function CitizenDashboard() {
 
       {/* Grid List or Empty State */}
       {activeComplaints.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 flex flex-col items-center text-center shadow-sm">
-          <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+        <div className="bg-card border border-border rounded-xl p-12 flex flex-col items-center text-center shadow-sm">
+          <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
             <FileText className="h-8 w-8 text-slate-400" />
           </div>
           <h3 className="text-xl font-semibold mb-2">{getEmptyStateMessage().title}</h3>
-          <p className="text-slate-500 max-w-sm">{getEmptyStateMessage().desc}</p>
+          <p className="text-muted-foreground max-w-sm">{getEmptyStateMessage().desc}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeComplaints.map((complaint) => (
-            <div key={complaint.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div key={complaint.id} className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-3">
                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-full capitalize
                   ${complaint.status === 'resolved' ? 'bg-green-100 text-green-700' : ''}
@@ -211,15 +211,15 @@ export default function CitizenDashboard() {
                   ${complaint.severity === 'low' ? 'bg-purple-500' : ''}
                 `} title={`Severity: ${complaint.severity}`}></span>
               </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-1">{complaint.title}</h3>
-              <p className="text-sm text-slate-500 line-clamp-2 mb-4 h-10">{complaint.description}</p>
+              <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-1">{complaint.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">{complaint.description}</p>
               
-              <div className="pt-4 border-t border-slate-100 space-y-2">
-                <div className="flex items-center text-xs text-slate-500 gap-2">
+              <div className="pt-4 border-t border-border space-y-2">
+                <div className="flex items-center text-xs text-muted-foreground gap-2">
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{complaint.location.address} (Ward {complaint.location.ward})</span>
                 </div>
-                <div className="flex items-center text-xs text-slate-500 gap-2">
+                <div className="flex items-center text-xs text-muted-foreground gap-2">
                   <Clock className="h-3.5 w-3.5 shrink-0" />
                   <span>
                     {complaint.createdAt instanceof Date 

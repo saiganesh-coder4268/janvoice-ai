@@ -226,24 +226,24 @@ export default function NewComplaintPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Report an Issue</h1>
-        <p className="text-slate-500 mt-1">Help us identify and fix problems in Visakhapatnam.</p>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Report an Issue</h1>
+        <p className="text-muted-foreground mt-1">Help us identify and fix problems in Visakhapatnam.</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-card p-6 md:p-8 rounded-xl shadow-sm border border-border">
 
         {/* Describe the issue */}
         <div className="space-y-3">
-          <label className="block text-sm font-semibold text-slate-900">
+          <label className="block text-sm font-semibold text-foreground">
             What is the issue? <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <textarea
               {...register("description")}
-              className="w-full min-h-[120px] p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+              className="w-full min-h-[120px] p-4 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
               placeholder="Describe the problem (e.g., Deep pothole near the school gate, garbage overflowing for 3 days...)"
             />
-            <button type="button" className="absolute bottom-3 right-3 p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors" title="Record Voice">
+            <button type="button" className="absolute bottom-3 right-3 p-2 bg-muted text-muted-foreground rounded-full hover:bg-secondary transition-colors" title="Record Voice">
               <Mic className="h-4 w-4" />
             </button>
           </div>
@@ -252,27 +252,27 @@ export default function NewComplaintPage() {
 
         {/* Location */}
         <div className="space-y-3">
-          <label className="block text-sm font-semibold text-slate-900">
+          <label className="block text-sm font-semibold text-foreground">
             Where is it? <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2 mb-2">
-            <Button type="button" variant="outline" onClick={handleGetLocation} className="flex-1 gap-2 border-slate-300 text-slate-700">
+            <Button type="button" variant="outline" onClick={handleGetLocation} className="flex-1 gap-2 border-border text-muted-foreground">
               <MapPin className="h-4 w-4" /> Use Current Location
             </Button>
           </div>
           <input
             {...register("address")}
             type="text"
-            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             placeholder="Street address or landmark"
           />
           {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
 
           <div className="pt-2">
-            <label className="block text-sm font-semibold text-slate-900 mb-2">Ward Number <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-semibold text-foreground mb-2">Ward Number <span className="text-red-500">*</span></label>
             <select
               {...register("ward")}
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+              className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-card"
             >
               <option value="">Select a ward or area</option>
               {gvmcWards.map(w => (
@@ -287,10 +287,10 @@ export default function NewComplaintPage() {
 
         {/* Photos */}
         <div className="space-y-3">
-          <label className="block text-sm font-semibold text-slate-900">
+          <label className="block text-sm font-semibold text-foreground">
             Add Photos (Optional)
           </label>
-          <div className="relative border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-center p-6 text-center">
+          <div className="relative border-2 border-dashed border-border rounded-xl bg-muted hover:bg-muted transition-colors flex items-center justify-center p-6 text-center">
             {previewUrl ? (
               <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -298,7 +298,7 @@ export default function NewComplaintPage() {
                 <button
                   type="button"
                   onClick={clearImage}
-                  className="absolute -top-3 -right-3 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
+                  className="absolute -top-3 -right-3 p-1 bg-red-500 text-primary-foreground rounded-full shadow-md hover:bg-red-600 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -306,7 +306,7 @@ export default function NewComplaintPage() {
             ) : (
               <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full py-6">
                 <Camera className="h-8 w-8 text-slate-400 mb-2" />
-                <span className="text-sm text-slate-600 font-medium">Tap to capture or upload</span>
+                <span className="text-sm text-muted-foreground font-medium">Tap to capture or upload</span>
                 <span className="text-xs text-slate-400 mt-1">PNG, JPG up to 10MB</span>
                 <input
                   type="file"
@@ -320,11 +320,11 @@ export default function NewComplaintPage() {
         </div>
 
         {/* Submit */}
-        <div className="pt-4 border-t border-slate-100">
+        <div className="pt-4 border-t border-border">
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-primary-foreground font-semibold text-lg"
           >
             {isSubmitting ? (
               <>
@@ -338,7 +338,7 @@ export default function NewComplaintPage() {
               </>
             )}
           </Button>
-          <p className="text-center text-xs text-slate-500 mt-4">
+          <p className="text-center text-xs text-muted-foreground mt-4">
             By submitting, you agree that this report will be publicly visible (anonymized) on the Vizag civic map.
           </p>
         </div>

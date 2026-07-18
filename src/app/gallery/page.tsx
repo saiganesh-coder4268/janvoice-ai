@@ -29,24 +29,24 @@ export default function GalleryPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-muted">
       <TopBar tabs={landingTabs} />
 
       <main className="flex-1 container mx-auto px-4 md:px-6 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Resolution Gallery</h1>
-          <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Resolution Gallery</h1>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
             AI-verified civic improvements across India . See the impact of your reports.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {verifiedResolutions.map((res) => (
-            <div key={res.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex justify-between items-start">
+            <div key={res.id} className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+              <div className="p-5 border-b border-border flex justify-between items-start">
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900">{res.title}</h3>
-                  <p className="text-sm text-slate-500 mt-1">Ward {res.ward}</p>
+                  <h3 className="font-bold text-lg text-foreground">{res.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Ward {res.ward}</p>
                 </div>
                 <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold">
                   <CheckCircle className="h-3.5 w-3.5" />
@@ -54,14 +54,14 @@ export default function GalleryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1">
-                <div className="relative aspect-[4/3] bg-slate-200 rounded-bl-xl overflow-hidden">
+              <div className="grid grid-cols-2 gap-1 bg-muted p-1">
+                <div className="relative aspect-[4/3] bg-secondary rounded-bl-xl overflow-hidden">
                   <img src={res.before} alt="Before" className="object-cover w-full h-full" />
-                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded">BEFORE</div>
+                  <div className="absolute top-2 left-2 bg-black/60 text-primary-foreground text-xs font-bold px-2 py-1 rounded">BEFORE</div>
                 </div>
-                <div className="relative aspect-[4/3] bg-slate-200 rounded-br-xl overflow-hidden">
+                <div className="relative aspect-[4/3] bg-secondary rounded-br-xl overflow-hidden">
                   <img src={res.after} alt="After" className="object-cover w-full h-full" />
-                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded">AFTER</div>
+                  <div className="absolute top-2 left-2 bg-black/60 text-primary-foreground text-xs font-bold px-2 py-1 rounded">AFTER</div>
                 </div>
               </div>
             </div>

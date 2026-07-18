@@ -41,10 +41,10 @@ export default function SetupMPPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-muted p-4">
+      <div className="bg-card p-8 rounded-xl shadow-sm border border-border max-w-md w-full">
         <h1 className="text-2xl font-bold mb-6">Setup MP Account</h1>
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           Use this hidden page to create an MP user. You should remove this page in production.
         </p>
         <form onSubmit={handleSetup} className="space-y-4">
