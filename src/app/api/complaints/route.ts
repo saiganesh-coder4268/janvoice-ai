@@ -54,11 +54,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // 1. Call Gemini for Classification & Summary
-    const classificationPrompt = `
-You are a government civic complaint analysis system. Analyze the following 
-citizen submission from Visakhapatnam and return ONLY valid JSON:
+    // 1. Get Ward Context
+    const wardData = gvmcWards.find(w => w.wardNumber === location.ward);
+    const densityTier = wardData ? wardData.densityTier : "Medium";
+    const wardName = wardData ? wardData.name : "Unknown";
 
+    // 2. Call Gemini for Classification & Scoring
+    const classificationPrompt = `
+You are an advanced government civic complaint analysis system. Analyze the following 
+citizen submission from Visakhapatnam and calculate a Priority Score (0-100) based on severity, population density, and potential public impact.
+
+Context Information:
+- Submission text: "${description}"
+- Ward: ${location.ward} (${wardName})
+- Population Density Tier: ${densityTier}
+
+Return ONLY valid JSON in the exact structure below:
 {
   "detectedLanguage": "ISO 639-1 code",
   "translatedText": "English translation if not already English, else the original text",
@@ -67,41 +78,21 @@ citizen submission from Visakhapatnam and return ONLY valid JSON:
   "keywords": ["array", "of", "keywords"],
   "category": "roads" | "water" | "health" | "sanitation" | "safety" | "electricity" | "other",
   "severity": "critical" | "high" | "medium" | "low",
-  "confidenceScore": integer 0-100
+  "confidenceScore": <integer 0-100>,
+  "priorityScore": <integer 0-100>,
+  "priorityReasoning": "<one sentence explaining why this priority score was assigned based on the context>"
 }
-
-Submission text: ${description}
 `;
 
     let aiResult;
     try {
-      aiResult = await callGemini(classificationPrompt);
+      aiResult = await callGemini(classificationPrompt, 2); // 2 retries
     } catch (e: any) {
       console.error("AI Pipeline failed:", e);
       return NextResponse.json({ error: e.message || "AI Processing Failed. Did you set GEMINI_API_KEY in Vercel?" }, { status: 500 });
     }
 
-    // 2. Calculate Priority Score based on Ward Data
-    let severityScore = 0;
-    if (aiResult.severity === "critical") severityScore = 40;
-    if (aiResult.severity === "high") severityScore = 25;
-    if (aiResult.severity === "medium") severityScore = 15;
-    if (aiResult.severity === "low") severityScore = 5;
-
-    // Ward Population Tier logic - Increased heavily for proper classification
-    let wardScore = 5; // default low
-    const wardData = gvmcWards.find(w => w.wardNumber === location.ward);
-    if (wardData) {
-      if (wardData.densityTier === "High") wardScore = 40;
-      if (wardData.densityTier === "Medium") wardScore = 20;
-    }
-
-    // Mock other scores for demo (in real app, we'd query firestore for duplicates and Places API for infra)
-    const frequencyScore = 0; // Assuming new issue
-    const infraScore = 5; // Mock infra proximity
-    const recurrenceScore = 1;
-
-    const totalPriorityScore = severityScore + wardScore + frequencyScore + infraScore + recurrenceScore;
+    const totalPriorityScore = typeof aiResult.priorityScore === 'number' ? aiResult.priorityScore : 50;
 
     // 3. Save to Firestore
     const complaintRef = doc(collection(db, "complaints"));
@@ -131,13 +122,13 @@ Submission text: ${description}
       keywords: aiResult.keywords,
       duplicateOf: null,
       confidenceScore: aiResult.confidenceScore,
-      recommendation: "Pending automated clustering analysis",
+      recommendation: aiResult.priorityReasoning || "Pending automated clustering analysis",
       priorityBreakdown: {
-        frequency: frequencyScore,
-        severity: severityScore,
-        infrastructure: infraScore,
-        wardPopulationTier: wardScore,
-        recurrence: recurrenceScore,
+        frequency: 0,
+        severity: 0,
+        infrastructure: 0,
+        wardPopulationTier: 0,
+        recurrence: 0,
       }
     };
 

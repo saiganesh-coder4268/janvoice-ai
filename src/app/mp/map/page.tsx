@@ -150,12 +150,11 @@ export default function FullMapPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
               {/* Main Image */}
               {activeComplaint.imageURLs && activeComplaint.imageURLs.length > 0 && (
-                <div className={`relative w-full rounded-2xl overflow-hidden shadow-sm bg-muted transition-all duration-300 ${isExpanded ? "h-[400px] md:h-[500px]" : "h-56"}`}>
-                   <Image 
+                <div className="relative w-full rounded-2xl overflow-hidden shadow-sm bg-muted/50 flex justify-center items-center transition-all duration-300">
+                   <img 
                      src={activeComplaint.imageURLs[0]} 
                      alt={activeComplaint.title} 
-                     fill 
-                     className="object-cover hover:scale-105 transition-transform duration-700" 
+                     className={`w-full h-auto object-contain transition-all duration-700 ${isExpanded ? "max-h-[500px]" : "max-h-[250px]"}`} 
                    />
                 </div>
               )}

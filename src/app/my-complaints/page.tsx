@@ -137,12 +137,11 @@ export default function MyComplaintsPage() {
                 >
                   <div className="flex flex-col md:flex-row gap-6">
                     {complaint.imageURLs && complaint.imageURLs.length > 0 ? (
-                      <div className="w-full md:w-48 h-32 relative rounded-lg overflow-hidden shrink-0 border border-border">
-                        <Image 
+                      <div className="w-full md:w-48 flex justify-center items-center rounded-lg overflow-hidden shrink-0 border border-border bg-slate-50 dark:bg-slate-800/50">
+                        <img 
                           src={complaint.imageURLs[0]} 
                           alt={complaint.title}
-                          fill
-                          className="object-cover"
+                          className="w-full h-auto object-contain max-h-[250px]"
                         />
                       </div>
                     ) : (

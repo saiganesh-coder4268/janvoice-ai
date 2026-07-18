@@ -80,12 +80,11 @@ export default function NotificationsPage() {
               >
                 <div className="p-5 sm:p-6 flex flex-col sm:flex-row gap-6">
                   {issue.imageURLs?.[0] && (
-                    <div className="w-full sm:w-48 h-32 relative rounded-lg overflow-hidden shrink-0 bg-muted">
-                      <Image 
+                    <div className="w-full sm:w-48 relative flex justify-center items-center rounded-lg overflow-hidden shrink-0 bg-muted/50 border border-border">
+                      <img 
                         src={issue.imageURLs[0]} 
                         alt="Issue resolution" 
-                        fill 
-                        className="object-cover"
+                        className="w-full h-auto object-contain max-h-[250px]"
                       />
                       <div className="absolute top-2 left-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-green-700 uppercase tracking-wider flex items-center gap-1 shadow-sm">
                         <CheckCircle2 className="h-3 w-3" /> Resolved

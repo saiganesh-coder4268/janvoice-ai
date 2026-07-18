@@ -139,12 +139,11 @@ export default function SearchPage() {
                 >
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
                     {issue.imageURLs?.[0] && (
-                      <div className="w-full sm:w-32 h-24 relative rounded-lg overflow-hidden shrink-0 bg-muted">
-                        <Image 
+                      <div className="w-full sm:w-32 flex justify-center items-center rounded-lg overflow-hidden shrink-0 bg-muted/50">
+                        <img 
                           src={issue.imageURLs[0]} 
                           alt={issue.title}
-                          fill 
-                          className="object-cover"
+                          className="w-full h-auto object-contain max-h-[200px]"
                         />
                       </div>
                     )}

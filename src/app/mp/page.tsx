@@ -274,12 +274,11 @@ export default function MPDashboard() {
               </div>
 
               {activeComplaint.imageURLs && activeComplaint.imageURLs.length > 0 && (
-                <div className="relative w-full h-32 rounded-xl overflow-hidden mb-3 shadow-inner">
-                  <Image 
+                <div className="relative w-full mb-3 bg-slate-100 dark:bg-slate-800/50 rounded-xl overflow-hidden shadow-inner flex justify-center items-center">
+                  <img 
                     src={activeComplaint.imageURLs[0]} 
                     alt="Issue photo" 
-                    fill 
-                    className="object-cover"
+                    className="w-full h-auto max-h-[300px] object-contain"
                   />
                 </div>
               )}
