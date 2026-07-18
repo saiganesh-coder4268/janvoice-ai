@@ -145,14 +145,14 @@ export default function MPDashboard() {
   const getMarkerStyle = (score: number | string, status: string) => {
     const priorityScore = Number(score) || 0;
     if (status === 'resolved') {
-      return { bg: '#00FF40', glow: '0 0 8px rgba(0,255,64,0.6)', blink: true };
+      return { bg: '#008080', glow: '0 0 8px rgba(0,128,128,0.6)', blink: false };
     }
     if (priorityScore >= 70) {
-      return { bg: '#FF003C', glow: '0 0 10px rgba(255,0,60,0.8)', blink: true };
+      return { bg: '#FF4500', glow: '0 0 10px rgba(255,69,0,0.8)', blink: true };
     } else if (priorityScore >= 45) {
-      return { bg: '#FF9D00', glow: '0 0 8px rgba(255,157,0,0.6)', blink: true };
+      return { bg: '#FFB300', glow: '0 0 8px rgba(255,179,0,0.6)', blink: true };
     } else {
-      return { bg: '#A855F7', glow: '0 0 6px rgba(168,85,247,0.5)', blink: true };
+      return { bg: '#008080', glow: '0 0 6px rgba(0,128,128,0.5)', blink: true };
     }
   };
 
@@ -183,10 +183,10 @@ export default function MPDashboard() {
 
   const getPriorityBgColor = (score: number | string, status: string) => {
     const priorityScore = Number(score) || 0;
-    if (status === 'resolved') return '#00FF40';
-    if (priorityScore >= 70) return '#FF003C';
-    if (priorityScore >= 45) return '#FF9D00';
-    return '#A855F7';
+    if (status === 'resolved') return '#008080';
+    if (priorityScore >= 70) return '#FF4500';
+    if (priorityScore >= 45) return '#FFB300';
+    return '#008080';
   };
 
   return (
@@ -313,16 +313,16 @@ export default function MPDashboard() {
           </div>
           <div className="flex flex-col gap-1.5 sm:gap-2">
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,0,60,0.8)]" style={{ backgroundColor: '#FF003C' }}></span> High (70-100)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,69,0,0.8)]" style={{ backgroundColor: '#FF4500' }}></span> High (70-100)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,157,0,0.8)]" style={{ backgroundColor: '#FF9D00' }}></span> Medium (45-69)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,179,0,0.8)]" style={{ backgroundColor: '#FFB300' }}></span> Medium (45-69)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" style={{ backgroundColor: '#A855F7' }}></span> Low (0-44)
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_6px_rgba(0,128,128,0.8)]" style={{ backgroundColor: '#008080' }}></span> Low (0-44)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,255,64,0.8)]" style={{ backgroundColor: '#00FF40' }}></span> Resolved
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,128,128,0.8)]" style={{ backgroundColor: '#008080' }}></span> Resolved
             </div>
           </div>
         </div>
