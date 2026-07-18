@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     // 1. Get Ward Context
     const wardData = gvmcWards.find(w => w.wardNumber === location.ward);
     const densityTier = wardData ? wardData.densityTier : "Medium";
-    const wardName = wardData ? wardData.name : "Unknown";
+    const wardName = wardData ? wardData.wardName : "Unknown";
 
     // 2. Call Gemini for Classification & Scoring
     const classificationPrompt = `
