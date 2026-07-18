@@ -145,7 +145,7 @@ export default function MPDashboard() {
   const getMarkerStyle = (score: number | string, status: string) => {
     const priorityScore = Number(score) || 0;
     if (status === 'resolved') {
-      return { bg: '#008080', glow: '0 0 8px rgba(0,128,128,0.6)', blink: false };
+      return { bg: '#10B981', glow: '0 0 8px rgba(16,185,129,0.6)', blink: false }; // Emerald for resolved
     }
     if (priorityScore >= 70) {
       return { bg: '#FF4500', glow: '0 0 10px rgba(255,69,0,0.8)', blink: true };
@@ -183,7 +183,7 @@ export default function MPDashboard() {
 
   const getPriorityBgColor = (score: number | string, status: string) => {
     const priorityScore = Number(score) || 0;
-    if (status === 'resolved') return '#008080';
+    if (status === 'resolved') return '#10B981';
     if (priorityScore >= 70) return '#FF4500';
     if (priorityScore >= 45) return '#FFB300';
     return '#008080';
@@ -322,7 +322,7 @@ export default function MPDashboard() {
               <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-pulse shadow-[0_0_6px_rgba(0,128,128,0.8)]" style={{ backgroundColor: '#008080' }}></span> Low (0-44)
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(0,128,128,0.8)]" style={{ backgroundColor: '#008080' }}></span> Resolved
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]" style={{ backgroundColor: '#10B981' }}></span> Resolved
             </div>
           </div>
         </div>
